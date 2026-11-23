@@ -54,7 +54,7 @@ export function PublicSharePage({ slug, onHome }: PublicSharePageProps) {
   }, [load]);
 
   return (
-    <div className="app">
+    <div className="app share-page">
       <TopBar onHome={onHome} active="home" publicMode />
 
       <section className="section share-hero">
@@ -64,7 +64,7 @@ export function PublicSharePage({ slug, onHome }: PublicSharePageProps) {
         <h1 className="share-title">
           {profile ? t('shareTitle').replace('{name}', profile.name) : t('shareLoadingTitle')}
         </h1>
-        <p className="section-sub">{t('shareSub')}</p>
+        <p className="section-sub share-sub">{t('shareSub')}</p>
       </section>
 
       {error && <div className="error-banner">{error}</div>}

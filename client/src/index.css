@@ -726,13 +726,15 @@ a {
   box-shadow: var(--shadow-soft);
   padding: 1.5rem;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 .heatmap-months {
   display: grid;
   gap: 3px;
   margin-bottom: 0.45rem;
-  min-width: 720px;
+  min-width: min(720px, 53 * 14px);
   height: 1.1rem;
   position: relative;
 }
@@ -822,7 +824,7 @@ html[data-theme='dark'] .lang-btn.is-active {
   grid-template-rows: repeat(7, minmax(10px, 14px));
   column-gap: 3px;
   row-gap: 6px;
-  min-width: 720px;
+  min-width: min(720px, 53 * 14px);
   width: 100%;
   padding-bottom: 0.35rem;
 }
@@ -1456,21 +1458,42 @@ html[data-theme='dark'] .success-banner {
   padding: 1.35rem 1.4rem 1.45rem;
 }
 
+.share-page {
+  padding-bottom: 2rem;
+}
+
 .share-hero {
-  padding-top: 1.5rem;
+  padding-top: 1.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .share-title {
   margin: 0.35rem 0 0.55rem;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(1.7rem, 7vw, 3rem);
   letter-spacing: -0.045em;
-  line-height: 1.05;
+  line-height: 1.08;
+  word-break: break-word;
+}
+
+.share-sub {
+  max-width: 36rem;
 }
 
 .entry-row-static {
   cursor: default;
   pointer-events: none;
+}
+
+.share-page .entry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.55rem;
+  align-items: center;
+}
+
+.share-page .lang-chips {
+  margin-left: 0;
 }
 
 .profile-share-copy {
@@ -1791,12 +1814,34 @@ html[data-theme='dark'] .form-pane-code {
     border-radius: 14px;
   }
 
+  .share-page .topnav {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'brand actions';
+    gap: 0.55rem;
+  }
+
+  .share-page .topnav-center {
+    display: none;
+  }
+
   .brand {
     font-size: clamp(2.8rem, 14vw, 3.8rem);
   }
 
   .section {
     padding-top: 2.5rem;
+  }
+
+  .share-page .section {
+    padding-top: 1.75rem;
+  }
+
+  .share-hero {
+    padding-top: 0.85rem;
+  }
+
+  .share-title {
+    font-size: clamp(1.55rem, 8.2vw, 2.2rem);
   }
 
   .section-head-split {
@@ -1810,6 +1855,70 @@ html[data-theme='dark'] .form-pane-code {
     grid-template-columns: 1fr;
   }
 
+  .share-page .showcase-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .share-page .show-card {
+    min-height: 120px;
+    padding: 0.95rem 1rem 1.05rem;
+  }
+
+  .share-page .show-value {
+    font-size: clamp(1.6rem, 8vw, 2.1rem);
+  }
+
+  .heatmap-card {
+    padding: 1rem 0.85rem 1.1rem;
+    border-radius: 20px;
+  }
+
+  .heatmap-months,
+  .heatmap {
+    min-width: 620px;
+  }
+
+  .heatmap {
+    grid-template-rows: repeat(7, minmax(9px, 11px));
+    column-gap: 2px;
+    row-gap: 4px;
+  }
+
+  .heat-cell {
+    min-height: 9px;
+    border-radius: 2px;
+  }
+
+  .share-page .entry-row {
+    gap: 0.55rem;
+    padding: 0.85rem 0.9rem;
+    border-radius: 16px;
+  }
+
+  .share-page .entry-title {
+    font-size: 0.98rem;
+  }
+
+  .share-page .entry-topics {
+    font-size: 0.82rem;
+    overflow-wrap: anywhere;
+  }
+
+  .share-page .pagination {
+    gap: 0.55rem;
+  }
+
+  .share-page .page-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .share-page .site-footer {
+    gap: 0.35rem;
+    text-align: center;
+  }
+
   .site-footer {
     flex-direction: column;
   }
@@ -1821,6 +1930,21 @@ html[data-theme='dark'] .form-pane-code {
 
   .float-card strong {
     font-size: 0.98rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .share-page .showcase-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .share-page .show-note {
+    font-size: 0.75rem;
+  }
+
+  .heatmap-months,
+  .heatmap {
+    min-width: 560px;
   }
 }
 
