@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, type FocusEvent, type MouseEvent } from 'react';
 import { useReveal } from '../hooks/useReveal';
 import { useI18n } from '../i18n/I18nContext';
 import type { Stats } from '../types';
@@ -6,6 +6,13 @@ import { SectionHead } from './SectionHead';
 
 interface HeatmapProps {
   activity: Stats['activity'];
+}
+
+interface HeatTip {
+  date: string;
+  count: number;
+  x: number;
+  y: number;
 }
 
 function levelFor(count: number): number {
@@ -42,11 +49,45 @@ function monthLabels(activity: Stats['activity'], lang: string) {
   return labels;
 }
 
+function formatHeatDate(isoDay: string, lang: string): string {
+  const date = new Date(`${isoDay}T00:00:00Z`);
+  return date.toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 export function Heatmap({ activity }: HeatmapProps) {
   const sectionRef = useReveal<HTMLElement>();
   const { t, lang } = useI18n();
   const weeks = Math.max(1, Math.ceil(activity.length / 7));
   const labels = useMemo(() => monthLabels(activity, lang), [activity, lang]);
+  const [tip, setTip] = useState<HeatTip | null>(null);
+
+  function showTip(
+    day: Stats['activity'][number],
+    event: MouseEvent<HTMLButtonElement> | FocusEvent<HTMLButtonElement>
+  ) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setTip({
+      date: day.date,
+      count: day.count,
+      x: rect.left + rect.width / 2,
+      y: rect.top,
+    });
+  }
+
+  const tipCountLabel =
+    tip == null
+      ? ''
+      : tip.count <= 0
+        ? t('heatTipNone')
+        : tip.count === 1
+          ? t('heatTipOne')
+          : t('heatTipMany').replace('{count}', String(tip.count));
 
   return (
     <section
@@ -84,10 +125,22 @@ export function Heatmap({ activity }: HeatmapProps) {
           style={{ gridTemplateColumns: `repeat(${weeks}, minmax(0, 1fr))` }}
         >
           {activity.map((day, index) => (
-            <div
+            <button
               key={day.date}
+              type="button"
               className={`heat-cell level-${levelFor(day.count)}`}
-              title={`${day.date}: ${day.count}`}
+              aria-label={`${formatHeatDate(day.date, lang)}: ${
+                day.count <= 0
+                  ? t('heatTipNone')
+                  : day.count === 1
+                    ? t('heatTipOne')
+                    : t('heatTipMany').replace('{count}', String(day.count))
+              }`}
+              onMouseEnter={(e) => showTip(day, e)}
+              onFocus={(e) => showTip(day, e)}
+              onMouseMove={(e) => showTip(day, e)}
+              onMouseLeave={() => setTip(null)}
+              onBlur={() => setTip(null)}
               style={{
                 gridColumn: Math.floor(index / 7) + 1,
                 gridRow: (index % 7) + 1,
@@ -107,6 +160,20 @@ export function Heatmap({ activity }: HeatmapProps) {
           <span>{t('more')}</span>
         </div>
       </div>
+
+      {tip && (
+        <div
+          className="heat-tip"
+          style={{
+            left: tip.x,
+            top: tip.y,
+          }}
+          role="tooltip"
+        >
+          <strong className="heat-tip-count">{tipCountLabel}</strong>
+          <span className="heat-tip-date">{formatHeatDate(tip.date, lang)}</span>
+        </div>
+      )}
     </section>
   );
 }
