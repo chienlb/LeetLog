@@ -130,7 +130,9 @@ export const translations = {
     shareRegenerateConfirm:
       'Create a new public link? Anyone with the old link will lose access.',
     shareRegenerated: 'New public link created',
+    shareRegeneratedBody: 'Your old link no longer works. Copy the new one below.',
     shareRegenerateFailed: 'Could not refresh the link',
+    sharePopupClose: 'Done',
     profileChangePass: 'Change password',
     profileCurrentPass: 'Current password',
     profileNewPass: 'New password',
@@ -270,7 +272,9 @@ export const translations = {
     shareRegenerateConfirm:
       'Tạo link công khai mới? Ai đang giữ link cũ sẽ không vào được nữa.',
     shareRegenerated: 'Đã tạo link công khai mới',
+    shareRegeneratedBody: 'Link cũ không còn dùng được. Copy link mới bên dưới.',
     shareRegenerateFailed: 'Không làm mới được link',
+    sharePopupClose: 'Xong',
     profileChangePass: 'Đổi mật khẩu',
     profileCurrentPass: 'Mật khẩu hiện tại',
     profileNewPass: 'Mật khẩu mới',

@@ -1525,6 +1525,15 @@ html[data-theme='dark'] .success-banner {
   line-height: 1.4;
 }
 
+.share-regen-popup {
+  width: min(520px, 100%);
+}
+
+.share-link-row-popup {
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 0.35rem;
+}
+
 @media (max-width: 720px) {
   .share-link-row {
     grid-template-columns: 1fr;

@@ -22,8 +22,10 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [popupCopied, setPopupCopied] = useState(false);
   const [linkLoading, setLinkLoading] = useState(!user.shareSlug);
   const [regenerating, setRegenerating] = useState(false);
+  const [regenPopupOpen, setRegenPopupOpen] = useState(false);
   const publicLink = user.shareSlug ? shareUrlForSlug(user.shareSlug) : '';
 
   useEffect(() => {
@@ -80,14 +82,27 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
     if (!window.confirm(t('shareRegenerateConfirm'))) return;
     setRegenerating(true);
     setError('');
+    setSuccess('');
     try {
       await regenerateShareSlug();
       setCopied(false);
-      setSuccess(t('shareRegenerated'));
+      setPopupCopied(false);
+      setRegenPopupOpen(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('shareRegenerateFailed'));
     } finally {
       setRegenerating(false);
+    }
+  }
+
+  async function handlePopupCopy() {
+    if (!publicLink) return;
+    try {
+      await navigator.clipboard.writeText(publicLink);
+      setPopupCopied(true);
+      window.setTimeout(() => setPopupCopied(false), 1800);
+    } catch {
+      window.prompt(t('shareCopyFallback'), publicLink);
     }
   }
 
@@ -234,6 +249,62 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
           </div>
         </div>
       </section>
+
+      {regenPopupOpen && (
+        <div
+          className="overlay"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setRegenPopupOpen(false);
+          }}
+        >
+          <div
+            className="panel share-regen-popup"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="share-regen-title"
+          >
+            <div className="panel-head">
+              <h2 className="panel-title" id="share-regen-title">
+                {t('shareRegenerated')}
+              </h2>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setRegenPopupOpen(false)}
+                aria-label={t('close')}
+              >
+                ×
+              </button>
+            </div>
+            <p className="profile-share-copy">{t('shareRegeneratedBody')}</p>
+            <div className="share-link-row share-link-row-popup">
+              <input
+                className="field"
+                value={publicLink}
+                readOnly
+                aria-label={t('share')}
+              />
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => void handlePopupCopy()}
+              >
+                {popupCopied ? t('shareCopied') : t('shareCopy')}
+              </button>
+            </div>
+            <div className="panel-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setRegenPopupOpen(false)}
+              >
+                {t('sharePopupClose')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
