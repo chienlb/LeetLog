@@ -143,9 +143,13 @@ export function EntryForm({
     setEditing(false);
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!canEdit || !onSave) return;
+  function beginEdit() {
+    // Defer so this click cannot land on the Save button that replaces Edit.
+    window.setTimeout(() => setEditing(true), 0);
+  }
+
+  async function saveEntry() {
+    if (!canEdit || !onSave || saving) return;
     if (!form.title.trim()) {
       setError(t('formTitleRequired'));
       return;
@@ -176,6 +180,11 @@ export function EntryForm({
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    await saveEntry();
   }
 
   async function handleDelete() {
@@ -438,7 +447,12 @@ export function EntryForm({
                 >
                   {t('formCancel')}
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={saving}
+                  onClick={() => void saveEntry()}
+                >
                   {saving ? t('formSaving') : entry ? t('formSave') : t('formCreate')}
                 </button>
               </>
@@ -457,11 +471,7 @@ export function EntryForm({
                 <button type="button" className="btn btn-ghost" onClick={onClose}>
                   {t('close')}
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => setEditing(true)}
-                >
+                <button type="button" className="btn btn-primary" onClick={beginEdit}>
                   {t('formEdit')}
                 </button>
               </>
