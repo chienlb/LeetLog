@@ -54,12 +54,9 @@ export function CodeEditor({
       EditorView.editable.of(!readOnly),
       EditorView.theme({
         '&': {
-          height: '100%',
-          maxHeight: '100%',
           fontSize: '0.86rem',
         },
         '.cm-scroller': {
-          overflow: 'auto',
           fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
           lineHeight: '1.55',
         },
@@ -81,7 +78,8 @@ export function CodeEditor({
     <div className={`code-editor-shell${readOnly ? ' is-readonly' : ''}`} aria-label={ariaLabel}>
       <CodeMirror
         value={value}
-        height="100%"
+        height="auto"
+        minHeight="220px"
         theme={theme === 'dark' ? vscodeDark : githubLight}
         extensions={extensions}
         placeholder={placeholder}

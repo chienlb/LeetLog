@@ -913,6 +913,11 @@ html[data-theme='dark'] .lang-btn.is-active {
   overflow: hidden;
 }
 
+.panel.panel-wide > .panel-head,
+.panel.panel-wide > .error-banner {
+  flex-shrink: 0;
+}
+
 .form-split {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
@@ -1041,25 +1046,25 @@ html[data-theme='dark'] .lang-btn.is-active {
 }
 
 .code-editor-shell {
-  min-height: 0;
-  height: 100%;
   min-width: 0;
-  overflow: hidden;
+  min-height: 220px;
+  max-height: min(52vh, 520px);
+  overflow: auto;
+  overscroll-behavior: contain;
   border: 1.5px solid var(--line);
   border-radius: 16px;
   background: var(--bg);
+  -webkit-overflow-scrolling: touch;
 }
 
 .code-editor-shell .cm-editor {
-  height: 100%;
-  max-height: 100%;
   border-radius: 16px;
-  overflow: hidden;
+  height: auto !important;
+  min-height: 220px;
 }
 
 .code-editor-shell .cm-scroller {
-  overflow: auto !important;
-  max-height: 100%;
+  overflow: visible !important;
 }
 
 .code-editor-shell .cm-editor.cm-focused {
@@ -2188,7 +2193,7 @@ html[data-theme='dark'] .form-pane-code {
 
   .form-split {
     grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(280px, 1fr) auto;
+    grid-template-rows: auto auto auto;
     grid-template-areas:
       'meta'
       'code'
@@ -2202,11 +2207,14 @@ html[data-theme='dark'] .form-pane-code {
   }
 
   .form-pane-code {
-    min-height: 280px;
+    min-height: 0;
+    height: auto;
+    overflow: visible;
   }
 
   .code-editor-shell {
-    min-height: 220px;
+    min-height: 200px;
+    max-height: min(42vh, 420px);
   }
 
   .hero-stage {
