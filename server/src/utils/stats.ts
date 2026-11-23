@@ -52,10 +52,14 @@ export function buildActivityHeatmap(
   }
 
   const today = startOfUtcDay(new Date());
-  // Align to week start (Sunday) so columns are clean calendar weeks
-  const start = new Date(today);
+
+  // End on Saturday of the current week so today is always visible,
+  // then walk back exactly `weeks` Sunday→Saturday columns.
+  const end = new Date(today);
+  end.setUTCDate(end.getUTCDate() + (6 - end.getUTCDay()));
+
+  const start = new Date(end);
   start.setUTCDate(start.getUTCDate() - (weeks * 7 - 1));
-  start.setUTCDate(start.getUTCDate() - start.getUTCDay());
 
   const totalDays = weeks * 7;
   const activity: { date: string; count: number }[] = [];
@@ -65,7 +69,8 @@ export function buildActivityHeatmap(
     const key = toDayKey(day);
     activity.push({
       date: key,
-      count: day > today ? 0 : (counts.get(key) ?? 0),
+      // Future days in the current week stay empty until they arrive.
+      count: day.getTime() > today.getTime() ? 0 : (counts.get(key) ?? 0),
     });
   }
 
