@@ -129,6 +129,7 @@ export const translations = {
     shareRegenerateHint: 'Creates a new link. The old one stops working.',
     shareRegenerateConfirm:
       'Create a new public link? Anyone with the old link will lose access.',
+    shareRegenerateConfirmAction: 'Create new link',
     shareRegenerated: 'New public link created',
     shareRegeneratedBody: 'Your old link no longer works. Copy the new one below.',
     shareRegenerateFailed: 'Could not refresh the link',
@@ -271,6 +272,7 @@ export const translations = {
     shareRegenerateHint: 'Tạo link mới. Link cũ sẽ không còn mở được.',
     shareRegenerateConfirm:
       'Tạo link công khai mới? Ai đang giữ link cũ sẽ không vào được nữa.',
+    shareRegenerateConfirmAction: 'Tạo link mới',
     shareRegenerated: 'Đã tạo link công khai mới',
     shareRegeneratedBody: 'Link cũ không còn dùng được. Copy link mới bên dưới.',
     shareRegenerateFailed: 'Không làm mới được link',

@@ -1525,13 +1525,74 @@ html[data-theme='dark'] .success-banner {
   line-height: 1.4;
 }
 
-.share-regen-popup {
-  width: min(520px, 100%);
+.share-dialog {
+  width: min(440px, 100%);
+  text-align: center;
+  padding: 1.75rem 1.5rem 1.45rem;
 }
 
-.share-link-row-popup {
-  grid-template-columns: minmax(0, 1fr) auto;
-  margin-bottom: 0.35rem;
+.share-dialog-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  font-weight: 700;
+  background: var(--lavender-soft);
+  color: var(--lavender-deep);
+  border: 1.5px solid rgba(183, 166, 255, 0.45);
+}
+
+.share-dialog-icon.is-success {
+  background: rgba(184, 242, 212, 0.35);
+  color: #1f7a4d;
+  border-color: rgba(184, 242, 212, 0.7);
+}
+
+.share-dialog-title {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  letter-spacing: -0.04em;
+}
+
+.share-dialog-body {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.share-link-stack {
+  display: grid;
+  gap: 0.65rem;
+  margin-bottom: 1.15rem;
+  text-align: left;
+}
+
+.share-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.share-dialog-actions .btn {
+  min-width: 132px;
+}
+
+html[data-theme='dark'] .share-dialog-icon {
+  background: rgba(183, 166, 255, 0.16);
+  color: #cfc6ff;
+  border-color: rgba(183, 166, 255, 0.35);
+}
+
+html[data-theme='dark'] .share-dialog-icon.is-success {
+  background: rgba(184, 242, 212, 0.14);
+  color: #9be7c0;
+  border-color: rgba(184, 242, 212, 0.28);
 }
 
 @media (max-width: 720px) {

@@ -25,6 +25,7 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
   const [popupCopied, setPopupCopied] = useState(false);
   const [linkLoading, setLinkLoading] = useState(!user.shareSlug);
   const [regenerating, setRegenerating] = useState(false);
+  const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
   const [regenPopupOpen, setRegenPopupOpen] = useState(false);
   const publicLink = user.shareSlug ? shareUrlForSlug(user.shareSlug) : '';
 
@@ -78,8 +79,13 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
     }
   }
 
-  async function handleRegenerateShare() {
-    if (!window.confirm(t('shareRegenerateConfirm'))) return;
+  function openRegenConfirm() {
+    setError('');
+    setSuccess('');
+    setRegenConfirmOpen(true);
+  }
+
+  async function confirmRegenerateShare() {
     setRegenerating(true);
     setError('');
     setSuccess('');
@@ -87,8 +93,10 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
       await regenerateShareSlug();
       setCopied(false);
       setPopupCopied(false);
+      setRegenConfirmOpen(false);
       setRegenPopupOpen(true);
     } catch (err) {
+      setRegenConfirmOpen(false);
       setError(err instanceof Error ? err.message : t('shareRegenerateFailed'));
     } finally {
       setRegenerating(false);
@@ -160,7 +168,7 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
-                    onClick={() => void handleRegenerateShare()}
+                    onClick={openRegenConfirm}
                     disabled={regenerating}
                   >
                     {regenerating ? t('shareRegenerating') : t('shareRegenerate')}
@@ -250,6 +258,49 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
         </div>
       </section>
 
+      {regenConfirmOpen && (
+        <div
+          className="overlay"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !regenerating) setRegenConfirmOpen(false);
+          }}
+        >
+          <div
+            className="panel share-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="share-confirm-title"
+          >
+            <div className="share-dialog-icon" aria-hidden="true">
+              ↻
+            </div>
+            <h2 className="share-dialog-title" id="share-confirm-title">
+              {t('shareRegenerate')}
+            </h2>
+            <p className="share-dialog-body">{t('shareRegenerateConfirm')}</p>
+            <div className="share-dialog-actions">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setRegenConfirmOpen(false)}
+                disabled={regenerating}
+              >
+                {t('formCancel')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => void confirmRegenerateShare()}
+                disabled={regenerating}
+              >
+                {regenerating ? t('shareRegenerating') : t('shareRegenerateConfirmAction')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {regenPopupOpen && (
         <div
           className="overlay"
@@ -259,26 +310,19 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
           }}
         >
           <div
-            className="panel share-regen-popup"
+            className="panel share-dialog"
             role="dialog"
             aria-modal="true"
             aria-labelledby="share-regen-title"
           >
-            <div className="panel-head">
-              <h2 className="panel-title" id="share-regen-title">
-                {t('shareRegenerated')}
-              </h2>
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => setRegenPopupOpen(false)}
-                aria-label={t('close')}
-              >
-                ×
-              </button>
+            <div className="share-dialog-icon is-success" aria-hidden="true">
+              ✓
             </div>
-            <p className="profile-share-copy">{t('shareRegeneratedBody')}</p>
-            <div className="share-link-row share-link-row-popup">
+            <h2 className="share-dialog-title" id="share-regen-title">
+              {t('shareRegenerated')}
+            </h2>
+            <p className="share-dialog-body">{t('shareRegeneratedBody')}</p>
+            <div className="share-link-stack">
               <input
                 className="field"
                 value={publicLink}
@@ -287,13 +331,13 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
               />
               <button
                 type="button"
-                className="btn btn-primary btn-sm"
+                className="btn btn-ghost"
                 onClick={() => void handlePopupCopy()}
               >
                 {popupCopied ? t('shareCopied') : t('shareCopy')}
               </button>
             </div>
-            <div className="panel-actions">
+            <div className="share-dialog-actions">
               <button
                 type="button"
                 className="btn btn-primary"
