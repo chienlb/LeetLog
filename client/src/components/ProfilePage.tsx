@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react';
-import { changePassword } from '../api';
+import { useEffect, useState, type FormEvent } from 'react';
+import { changePassword, shareUrlForSlug } from '../api';
+import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
 import type { User } from '../types';
 import { SectionHead } from './SectionHead';
@@ -13,12 +14,27 @@ interface ProfilePageProps {
 
 export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
   const { t } = useI18n();
+  const { ensureShareSlug } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [linkLoading, setLinkLoading] = useState(!user.shareSlug);
+  const publicLink = user.shareSlug ? shareUrlForSlug(user.shareSlug) : '';
+
+  useEffect(() => {
+    if (user.shareSlug) {
+      setLinkLoading(false);
+      return;
+    }
+    setLinkLoading(true);
+    void ensureShareSlug()
+      .catch(() => undefined)
+      .finally(() => setLinkLoading(false));
+  }, [ensureShareSlug, user.shareSlug]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -48,10 +64,22 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
     }
   }
 
+  async function handleCopyShare() {
+    if (!publicLink) return;
+    try {
+      await navigator.clipboard.writeText(publicLink);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      window.prompt(t('shareCopyFallback'), publicLink);
+    }
+  }
+
   return (
     <div className="profile-page">
       <TopBar
         userName={user.name}
+        shareSlug={user.shareSlug}
         onLogout={onLogout}
         onProfile={() => undefined}
         onHome={onHome}
@@ -74,6 +102,33 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
                 <dd>{user.email}</dd>
               </div>
             </dl>
+          </div>
+
+          <div className="profile-card">
+            <h3 className="profile-card-title">{t('shareCardTitle')}</h3>
+            <p className="profile-share-copy">{t('shareCardSub')}</p>
+            {publicLink ? (
+              <div className="share-link-row">
+                <input className="field" value={publicLink} readOnly aria-label={t('share')} />
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => void handleCopyShare()}
+                >
+                  {copied ? t('shareCopied') : t('shareCopy')}
+                </button>
+                <a
+                  className="btn btn-ghost btn-sm"
+                  href={`#/u/${encodeURIComponent(user.shareSlug)}`}
+                >
+                  {t('shareOpen')}
+                </a>
+              </div>
+            ) : (
+              <p className="profile-share-copy">
+                {linkLoading ? t('shareLinkPending') : t('shareLinkMissing')}
+              </p>
+            )}
           </div>
 
           <div className="profile-card">

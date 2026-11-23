@@ -4,6 +4,7 @@ import { TopBar } from './TopBar';
 interface HeroProps {
   onLog: () => void;
   userName?: string;
+  shareSlug?: string;
   onLogout?: () => void;
   onSignIn?: () => void;
   onProfile?: () => void;
@@ -13,6 +14,7 @@ interface HeroProps {
 export function Hero({
   onLog,
   userName,
+  shareSlug,
   onLogout,
   onSignIn,
   onProfile,
@@ -24,6 +26,7 @@ export function Hero({
     <header className="hero">
       <TopBar
         userName={userName}
+        shareSlug={shareSlug}
         onLog={onLog}
         onLogout={onLogout}
         onSignIn={onSignIn}

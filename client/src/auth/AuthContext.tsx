@@ -7,8 +7,22 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { fetchMe, getToken, login as apiLogin, register as apiRegister, setToken } from '../api';
+import {
+  ensureShareLink,
+  fetchMe,
+  getToken,
+  login as apiLogin,
+  register as apiRegister,
+  setToken,
+} from '../api';
 import type { User } from '../types';
+
+function normalizeUser(user: User): User {
+  return {
+    ...user,
+    shareSlug: user.shareSlug ?? '',
+  };
+}
 
 interface AuthContextValue {
   user: User | null;
@@ -16,6 +30,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<User | null>;
+  ensureShareSlug: () => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -23,6 +39,30 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshUser = useCallback(async () => {
+    const token = getToken();
+    if (!token) {
+      setUser(null);
+      return null;
+    }
+    const { user: me } = await fetchMe();
+    const next = normalizeUser(me);
+    setUser(next);
+    return next;
+  }, []);
+
+  const ensureShareSlug = useCallback(async () => {
+    try {
+      const { user: nextRaw } = await ensureShareLink();
+      const next = normalizeUser(nextRaw);
+      setUser(next);
+      return next.shareSlug;
+    } catch {
+      const refreshed = await refreshUser();
+      return refreshed?.shareSlug ?? '';
+    }
+  }, [refreshUser]);
 
   useEffect(() => {
     const token = getToken();
@@ -32,7 +72,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     void fetchMe()
-      .then(({ user: me }) => setUser(me))
+      .then(async ({ user: me }) => {
+        let next = normalizeUser(me);
+        if (!next.shareSlug) {
+          try {
+            const ensured = await ensureShareLink();
+            next = normalizeUser(ensured.user);
+          } catch {
+            /* older API without share-link — keep empty until deploy/login */
+          }
+        }
+        setUser(next);
+      })
       .catch(() => {
         setToken(null);
         setUser(null);
@@ -43,13 +94,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const { token, user: next } = await apiLogin({ email, password });
     setToken(token);
-    setUser(next);
+    setUser(normalizeUser(next));
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
     const { token, user: next } = await apiRegister({ name, email, password });
     setToken(token);
-    setUser(next);
+    setUser(normalizeUser(next));
   }, []);
 
   const logout = useCallback(() => {
@@ -58,8 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout]
+    () => ({ user, loading, login, register, logout, refreshUser, ensureShareSlug }),
+    [user, loading, login, register, logout, refreshUser, ensureShareSlug]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

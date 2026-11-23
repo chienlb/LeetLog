@@ -4,6 +4,7 @@ import express from 'express';
 import { connectDatabase } from './db.js';
 import authRouter from './routes/auth.js';
 import entriesRouter from './routes/entries.js';
+import publicRouter from './routes/public.js';
 import statsRouter from './routes/stats.js';
 
 dotenv.config();
@@ -26,6 +27,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/entries', entriesRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/public', publicRouter);
 
 async function start() {
   try {

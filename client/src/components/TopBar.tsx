@@ -1,28 +1,50 @@
-import { Moon, Sun, UserRound } from 'lucide-react';
+import { Moon, Share2, Sun, UserRound } from 'lucide-react';
+import { useState } from 'react';
+import { shareUrlForSlug } from '../api';
+import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
 import { useTheme } from '../theme/ThemeContext';
 
 interface TopBarProps {
   userName?: string;
+  shareSlug?: string;
   onLog?: () => void;
   onLogout?: () => void;
   onSignIn?: () => void;
   onProfile?: () => void;
   onHome?: () => void;
   active?: 'home' | 'profile';
+  publicMode?: boolean;
 }
 
 export function TopBar({
   userName,
+  shareSlug,
   onLog,
   onLogout,
   onSignIn,
   onProfile,
   onHome,
   active = 'home',
+  publicMode = false,
 }: TopBarProps) {
   const { t, lang, setLang } = useI18n();
   const { theme, toggleTheme } = useTheme();
+  const { ensureShareSlug } = useAuth();
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    const slug = shareSlug || (await ensureShareSlug());
+    if (!slug) return;
+    const url = shareUrlForSlug(slug);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      window.prompt(t('shareCopyFallback'), url);
+    }
+  }
 
   return (
     <nav className="topnav">
@@ -32,7 +54,7 @@ export function TopBar({
         </button>
       </div>
 
-      {active === 'home' ? (
+      {active === 'home' && !publicMode ? (
         <div className="topnav-center">
           <a href="#dashboard">{t('navProgress')}</a>
           <a href="#activity">{t('navRhythm')}</a>
@@ -77,8 +99,23 @@ export function TopBar({
         </div>
 
         <div className="topnav-actions">
-          {userName ? (
+          {publicMode ? (
+            <button type="button" className="btn btn-primary btn-sm" onClick={onHome}>
+              {t('shareBackHome')}
+            </button>
+          ) : userName ? (
             <>
+              {userName && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => void handleShare()}
+                  title={t('share')}
+                >
+                  <Share2 size={16} strokeWidth={1.8} />
+                  <span className="btn-label">{copied ? t('shareCopied') : t('share')}</span>
+                </button>
+              )}
               <button
                 type="button"
                 className={`btn btn-ghost btn-sm ${active === 'profile' ? 'is-nav-active' : ''}`}

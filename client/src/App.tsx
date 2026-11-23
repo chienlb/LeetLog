@@ -14,8 +14,14 @@ import { EntryList } from './components/EntryList';
 import { Heatmap } from './components/Heatmap';
 import { Hero } from './components/Hero';
 import { ProfilePage } from './components/ProfilePage';
+import { PublicSharePage } from './components/PublicSharePage';
 import { useI18n } from './i18n/I18nContext';
 import type { Entry, EntryFilters, EntryInput, Stats } from './types';
+
+function shareSlugFromHash(): string | null {
+  const match = window.location.hash.match(/^#\/u\/([^/?#]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
 const emptyFilters: EntryFilters = {
   difficulty: '',
@@ -31,6 +37,7 @@ export default function App() {
   const { t } = useI18n();
   const { user, loading: authLoading, logout } = useAuth();
   const [view, setView] = useState<View>('home');
+  const [shareSlug, setShareSlug] = useState<string | null>(() => shareSlugFromHash());
   const [entries, setEntries] = useState<Entry[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [filters, setFilters] = useState<EntryFilters>(emptyFilters);
@@ -45,6 +52,12 @@ export default function App() {
   const [formOpen, setFormOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [editing, setEditing] = useState<Entry | null>(null);
+
+  useEffect(() => {
+    const onHashChange = () => setShareSlug(shareSlugFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
 
   useEffect(() => {
     if (!user) setView('home');
@@ -152,6 +165,18 @@ export default function App() {
     await Promise.all([loadEntries(), loadStats()]);
   }
 
+  function goHome() {
+    if (window.location.hash.startsWith('#/u/')) {
+      window.location.hash = '';
+    }
+    setShareSlug(null);
+    setView('home');
+  }
+
+  if (shareSlug) {
+    return <PublicSharePage slug={shareSlug} onHome={goHome} />;
+  }
+
   if (authLoading) {
     return (
       <div className="boot-screen">
@@ -167,7 +192,7 @@ export default function App() {
         <ProfilePage
           user={user}
           onLogout={logout}
-          onHome={() => setView('home')}
+          onHome={goHome}
         />
         <footer className="site-footer">
           <span>
@@ -184,10 +209,11 @@ export default function App() {
       <Hero
         onLog={openCreate}
         userName={user?.name}
+        shareSlug={user?.shareSlug}
         onLogout={logout}
         onSignIn={() => setAuthOpen(true)}
         onProfile={() => setView('profile')}
-        onHome={() => setView('home')}
+        onHome={goHome}
       />
 
       {error && <div className="error-banner">{error}</div>}

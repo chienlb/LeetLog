@@ -4,6 +4,8 @@ import type {
   EntryFilters,
   EntryInput,
   PaginatedEntries,
+  PublicSharePayload,
+  SolutionLanguage,
   Stats,
   User,
 } from './types';
@@ -92,6 +94,10 @@ export function fetchMe(): Promise<{ user: User }> {
   return request<{ user: User }>('/api/auth/me');
 }
 
+export function ensureShareLink(): Promise<{ user: User }> {
+  return request<{ user: User }>('/api/auth/share-link', { method: 'POST' });
+}
+
 export function changePassword(data: {
   currentPassword: string;
   newPassword: string;
@@ -120,7 +126,7 @@ export async function fetchEntries(
             entry.languages?.length
               ? entry.languages
               : (entry.solutions ?? []).map((sol) => sol.language);
-          return langs.includes(filters.language as Entry['languages'][number]);
+          return langs.includes(filters.language as SolutionLanguage);
         })
       : data;
     const total = filtered.length;
@@ -159,4 +165,22 @@ export function updateEntry(id: string, data: EntryInput): Promise<Entry> {
 
 export function deleteEntry(id: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>(`/api/entries/${id}`, { method: 'DELETE' });
+}
+
+export function fetchPublicShare(
+  slug: string,
+  pagination: { page?: number; limit?: number } = {}
+): Promise<PublicSharePayload> {
+  const params = new URLSearchParams();
+  if (pagination.page) params.set('page', String(pagination.page));
+  if (pagination.limit) params.set('limit', String(pagination.limit));
+  const qs = params.toString();
+  return request<PublicSharePayload>(
+    `/api/public/${encodeURIComponent(slug)}${qs ? `?${qs}` : ''}`
+  );
+}
+
+export function shareUrlForSlug(slug: string): string {
+  const base = window.location.origin + window.location.pathname.replace(/\/$/, '');
+  return `${base}#/u/${encodeURIComponent(slug)}`;
 }

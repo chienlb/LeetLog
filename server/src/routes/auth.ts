@@ -2,14 +2,21 @@ import bcrypt from 'bcryptjs';
 import { Router, type Request, type Response } from 'express';
 import { requireAuth, signToken } from '../middleware/auth.js';
 import { User } from '../models/User.js';
+import { createUniqueShareSlug, ensureShareSlug } from '../utils/shareSlug.js';
 
 const router = Router();
 
-function publicUser(user: { _id: { toString(): string }; name: string; email: string }) {
+function publicUser(user: {
+  _id: { toString(): string };
+  name: string;
+  email: string;
+  shareSlug?: string | null;
+}) {
   return {
     id: user._id.toString(),
     name: user.name,
     email: user.email,
+    shareSlug: user.shareSlug ?? '',
   };
 }
 
@@ -38,10 +45,12 @@ router.post('/register', async (req: Request, res: Response) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const shareSlug = await createUniqueShareSlug(name.trim());
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
       passwordHash,
+      shareSlug,
     });
 
     const token = signToken({
@@ -78,6 +87,8 @@ router.post('/login', async (req: Request, res: Response) => {
       return;
     }
 
+    await ensureShareSlug(user);
+
     const token = signToken({
       userId: user._id.toString(),
       email: user.email,
@@ -93,15 +104,31 @@ router.post('/login', async (req: Request, res: Response) => {
 
 router.get('/me', requireAuth, async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.user!.userId).select('name email');
+    const user = await User.findById(req.user!.userId).select('name email shareSlug');
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
+    await ensureShareSlug(user);
     res.json({ user: publicUser(user) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to load profile' });
+  }
+});
+
+router.post('/share-link', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById(req.user!.userId).select('name email shareSlug');
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    await ensureShareSlug(user);
+    res.json({ user: publicUser(user) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create share link' });
   }
 });
 

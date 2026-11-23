@@ -11,6 +11,14 @@ const userSchema = new Schema(
       trim: true,
     },
     passwordHash: { type: String, required: true },
+    shareSlug: {
+      type: String,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
   },
   { timestamps: true }
 );

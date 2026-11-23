@@ -19,6 +19,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  shareSlug: string;
 }
 
 export interface AuthResponse {
@@ -36,9 +37,9 @@ export interface Entry {
   status: Status;
   solvedAt: string;
   timeSpentMinutes: number | null;
-  notes: string;
-  languages: SolutionLanguage[];
-  solutions: Solution[];
+  notes?: string;
+  languages?: SolutionLanguage[];
+  solutions?: Solution[];
   createdAt: string;
   updatedAt: string;
 }
@@ -78,4 +79,15 @@ export interface PaginatedEntries {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface PublicProfile {
+  name: string;
+  shareSlug: string;
+}
+
+export interface PublicSharePayload {
+  profile: PublicProfile;
+  stats: Stats;
+  entries: PaginatedEntries;
 }
