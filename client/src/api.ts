@@ -8,6 +8,11 @@ import type {
 } from './types';
 
 const TOKEN_KEY = 'leetlog_token';
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || '';
+
+function apiUrl(path: string): string {
+  return `${API_BASE}${path}`;
+}
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -36,7 +41,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(url, {
+  const res = await fetch(apiUrl(url), {
     ...init,
     headers,
   });
