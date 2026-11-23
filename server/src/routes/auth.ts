@@ -2,7 +2,11 @@ import bcrypt from 'bcryptjs';
 import { Router, type Request, type Response } from 'express';
 import { requireAuth, signToken } from '../middleware/auth.js';
 import { User } from '../models/User.js';
-import { createUniqueShareSlug, ensureShareSlug } from '../utils/shareSlug.js';
+import {
+  createUniqueShareSlug,
+  ensureShareSlug,
+  regenerateShareSlug,
+} from '../utils/shareSlug.js';
 
 const router = Router();
 
@@ -129,6 +133,21 @@ router.post('/share-link', requireAuth, async (req: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create share link' });
+  }
+});
+
+router.post('/share-link/regenerate', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById(req.user!.userId).select('name email shareSlug');
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    await regenerateShareSlug(user);
+    res.json({ user: publicUser(user) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to regenerate share link' });
   }
 });
 

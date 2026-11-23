@@ -40,3 +40,18 @@ export async function ensureShareSlug(user: {
   user.shareSlug = shareSlug;
   return shareSlug;
 }
+
+export async function regenerateShareSlug(user: {
+  _id: unknown;
+  name: string;
+  shareSlug?: string | null;
+}): Promise<string> {
+  let shareSlug = await createUniqueShareSlug(user.name);
+  // Avoid reusing the current slug if RNG collides with the old one.
+  while (shareSlug === user.shareSlug) {
+    shareSlug = await createUniqueShareSlug(user.name);
+  }
+  await User.findByIdAndUpdate(user._id, { shareSlug });
+  user.shareSlug = shareSlug;
+  return shareSlug;
+}

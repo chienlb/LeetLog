@@ -14,7 +14,7 @@ interface ProfilePageProps {
 
 export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
   const { t } = useI18n();
-  const { ensureShareSlug } = useAuth();
+  const { ensureShareSlug, regenerateShareSlug } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,6 +23,7 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [linkLoading, setLinkLoading] = useState(!user.shareSlug);
+  const [regenerating, setRegenerating] = useState(false);
   const publicLink = user.shareSlug ? shareUrlForSlug(user.shareSlug) : '';
 
   useEffect(() => {
@@ -75,6 +76,21 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
     }
   }
 
+  async function handleRegenerateShare() {
+    if (!window.confirm(t('shareRegenerateConfirm'))) return;
+    setRegenerating(true);
+    setError('');
+    try {
+      await regenerateShareSlug();
+      setCopied(false);
+      setSuccess(t('shareRegenerated'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('shareRegenerateFailed'));
+    } finally {
+      setRegenerating(false);
+    }
+  }
+
   return (
     <div className="profile-page">
       <TopBar
@@ -108,22 +124,35 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
             <h3 className="profile-card-title">{t('shareCardTitle')}</h3>
             <p className="profile-share-copy">{t('shareCardSub')}</p>
             {publicLink ? (
-              <div className="share-link-row">
-                <input className="field" value={publicLink} readOnly aria-label={t('share')} />
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={() => void handleCopyShare()}
-                >
-                  {copied ? t('shareCopied') : t('shareCopy')}
-                </button>
-                <a
-                  className="btn btn-ghost btn-sm"
-                  href={`/u/${encodeURIComponent(user.shareSlug)}`}
-                >
-                  {t('shareOpen')}
-                </a>
-              </div>
+              <>
+                <div className="share-link-row">
+                  <input className="field" value={publicLink} readOnly aria-label={t('share')} />
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={() => void handleCopyShare()}
+                  >
+                    {copied ? t('shareCopied') : t('shareCopy')}
+                  </button>
+                  <a
+                    className="btn btn-ghost btn-sm"
+                    href={`/u/${encodeURIComponent(user.shareSlug)}`}
+                  >
+                    {t('shareOpen')}
+                  </a>
+                </div>
+                <div className="share-regen-row">
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => void handleRegenerateShare()}
+                    disabled={regenerating}
+                  >
+                    {regenerating ? t('shareRegenerating') : t('shareRegenerate')}
+                  </button>
+                  <p className="share-regen-hint">{t('shareRegenerateHint')}</p>
+                </div>
+              </>
             ) : (
               <p className="profile-share-copy">
                 {linkLoading ? t('shareLinkPending') : t('shareLinkMissing')}

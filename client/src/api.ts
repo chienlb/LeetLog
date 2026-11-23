@@ -98,6 +98,12 @@ export function ensureShareLink(): Promise<{ user: User }> {
   return request<{ user: User }>('/api/auth/share-link', { method: 'POST' });
 }
 
+export function regenerateShareLink(): Promise<{ user: User }> {
+  return request<{ user: User }>('/api/auth/share-link/regenerate', {
+    method: 'POST',
+  });
+}
+
 export function changePassword(data: {
   currentPassword: string;
   newPassword: string;

@@ -12,6 +12,7 @@ import {
   fetchMe,
   getToken,
   login as apiLogin,
+  regenerateShareLink,
   register as apiRegister,
   setToken,
 } from '../api';
@@ -32,6 +33,7 @@ interface AuthContextValue {
   logout: () => void;
   refreshUser: () => Promise<User | null>;
   ensureShareSlug: () => Promise<string>;
+  regenerateShareSlug: () => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -63,6 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return refreshed?.shareSlug ?? '';
     }
   }, [refreshUser]);
+
+  const regenerateShareSlug = useCallback(async () => {
+    const { user: nextRaw } = await regenerateShareLink();
+    const next = normalizeUser(nextRaw);
+    setUser(next);
+    return next.shareSlug;
+  }, []);
 
   useEffect(() => {
     const token = getToken();
@@ -109,8 +118,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, refreshUser, ensureShareSlug }),
-    [user, loading, login, register, logout, refreshUser, ensureShareSlug]
+    () => ({
+      user,
+      loading,
+      login,
+      register,
+      logout,
+      refreshUser,
+      ensureShareSlug,
+      regenerateShareSlug,
+    }),
+    [
+      user,
+      loading,
+      login,
+      register,
+      logout,
+      refreshUser,
+      ensureShareSlug,
+      regenerateShareSlug,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

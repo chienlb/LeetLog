@@ -124,6 +124,13 @@ export const translations = {
     shareLinkPending: 'Creating your public link…',
     shareLinkMissing:
       'Could not load the auto link yet. The API may need a redeploy — then refresh this page.',
+    shareRegenerate: 'Refresh link',
+    shareRegenerating: 'Refreshing…',
+    shareRegenerateHint: 'Creates a new link. The old one stops working.',
+    shareRegenerateConfirm:
+      'Create a new public link? Anyone with the old link will lose access.',
+    shareRegenerated: 'New public link created',
+    shareRegenerateFailed: 'Could not refresh the link',
     profileChangePass: 'Change password',
     profileCurrentPass: 'Current password',
     profileNewPass: 'New password',
@@ -257,6 +264,13 @@ export const translations = {
     shareLinkPending: 'Đang tạo link công khai…',
     shareLinkMissing:
       'Chưa lấy được link tự động. Có thể API chưa deploy bản mới — hãy refresh sau khi deploy.',
+    shareRegenerate: 'Làm mới link',
+    shareRegenerating: 'Đang làm mới…',
+    shareRegenerateHint: 'Tạo link mới. Link cũ sẽ không còn mở được.',
+    shareRegenerateConfirm:
+      'Tạo link công khai mới? Ai đang giữ link cũ sẽ không vào được nữa.',
+    shareRegenerated: 'Đã tạo link công khai mới',
+    shareRegenerateFailed: 'Không làm mới được link',
     profileChangePass: 'Đổi mật khẩu',
     profileCurrentPass: 'Mật khẩu hiện tại',
     profileNewPass: 'Mật khẩu mới',
