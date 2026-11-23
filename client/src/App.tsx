@@ -18,9 +18,12 @@ import { PublicSharePage } from './components/PublicSharePage';
 import { useI18n } from './i18n/I18nContext';
 import type { Entry, EntryFilters, EntryInput, Stats } from './types';
 
-function shareSlugFromHash(): string | null {
-  const match = window.location.hash.match(/^#\/u\/([^/?#]+)/);
-  return match ? decodeURIComponent(match[1]) : null;
+function shareSlugFromLocation(): string | null {
+  const pathMatch = window.location.pathname.match(/^\/u\/([^/]+)\/?$/);
+  if (pathMatch) return decodeURIComponent(pathMatch[1]);
+  // Legacy hash links
+  const hashMatch = window.location.hash.match(/^#\/u\/([^/?#]+)/);
+  return hashMatch ? decodeURIComponent(hashMatch[1]) : null;
 }
 
 const emptyFilters: EntryFilters = {
@@ -37,7 +40,7 @@ export default function App() {
   const { t } = useI18n();
   const { user, loading: authLoading, logout } = useAuth();
   const [view, setView] = useState<View>('home');
-  const [shareSlug, setShareSlug] = useState<string | null>(() => shareSlugFromHash());
+  const [shareSlug, setShareSlug] = useState<string | null>(() => shareSlugFromLocation());
   const [entries, setEntries] = useState<Entry[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [filters, setFilters] = useState<EntryFilters>(emptyFilters);
@@ -54,9 +57,13 @@ export default function App() {
   const [editing, setEditing] = useState<Entry | null>(null);
 
   useEffect(() => {
-    const onHashChange = () => setShareSlug(shareSlugFromHash());
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+    const syncShareRoute = () => setShareSlug(shareSlugFromLocation());
+    window.addEventListener('popstate', syncShareRoute);
+    window.addEventListener('hashchange', syncShareRoute);
+    return () => {
+      window.removeEventListener('popstate', syncShareRoute);
+      window.removeEventListener('hashchange', syncShareRoute);
+    };
   }, []);
 
   useEffect(() => {
@@ -166,6 +173,9 @@ export default function App() {
   }
 
   function goHome() {
+    if (window.location.pathname.startsWith('/u/')) {
+      window.history.pushState({}, '', '/');
+    }
     if (window.location.hash.startsWith('#/u/')) {
       window.location.hash = '';
     }

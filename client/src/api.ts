@@ -181,6 +181,5 @@ export function fetchPublicShare(
 }
 
 export function shareUrlForSlug(slug: string): string {
-  const base = window.location.origin + window.location.pathname.replace(/\/$/, '');
-  return `${base}#/u/${encodeURIComponent(slug)}`;
+  return `${window.location.origin}/u/${encodeURIComponent(slug)}`;
 }

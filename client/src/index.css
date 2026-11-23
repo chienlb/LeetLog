@@ -744,8 +744,29 @@ a {
   justify-self: start;
 }
 
-html[data-theme='dark'] .heat-cell {
-  background: rgba(183, 166, 255, 0.12);
+html[data-theme='dark'] .heat-cell,
+html[data-theme='dark'] .heat-legend .swatch {
+  background: rgba(183, 166, 255, 0.14);
+}
+
+html[data-theme='dark'] .heat-cell.level-1,
+html[data-theme='dark'] .heat-legend .swatch.l1 {
+  background: #4a3f8a;
+}
+
+html[data-theme='dark'] .heat-cell.level-2,
+html[data-theme='dark'] .heat-legend .swatch.l2 {
+  background: #6d5fd0;
+}
+
+html[data-theme='dark'] .heat-cell.level-3,
+html[data-theme='dark'] .heat-legend .swatch.l3 {
+  background: #9b8cff;
+}
+
+html[data-theme='dark'] .heat-cell.level-4,
+html[data-theme='dark'] .heat-legend .swatch.l4 {
+  background: #d9d2ff;
 }
 
 html[data-theme='dark'] .entry-row,

@@ -119,7 +119,7 @@ export function ProfilePage({ user, onLogout, onHome }: ProfilePageProps) {
                 </button>
                 <a
                   className="btn btn-ghost btn-sm"
-                  href={`#/u/${encodeURIComponent(user.shareSlug)}`}
+                  href={`/u/${encodeURIComponent(user.shareSlug)}`}
                 >
                   {t('shareOpen')}
                 </a>
