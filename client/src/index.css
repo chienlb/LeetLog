@@ -1462,6 +1462,127 @@ html[data-theme='dark'] .success-banner {
   padding-bottom: 2rem;
 }
 
+.share-page-miss {
+  min-height: 100vh;
+}
+
+.share-miss {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 1.5rem 2rem;
+  align-items: center;
+  padding: 2.25rem 0 3rem;
+}
+
+.share-miss-visual {
+  position: relative;
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+}
+
+.share-miss-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+  animation: floatY 6s ease-in-out infinite;
+}
+
+.share-miss-orb-a {
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(183, 166, 255, 0.55), transparent 70%);
+  left: 12%;
+  top: 10%;
+}
+
+.share-miss-orb-b {
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(255, 212, 184, 0.5), transparent 70%);
+  right: 10%;
+  bottom: 8%;
+  animation-delay: -2s;
+}
+
+.share-miss-card {
+  position: relative;
+  z-index: 1;
+  width: min(320px, 100%);
+  padding: 1.35rem 1.4rem;
+  border-radius: 24px;
+  background: var(--card-glass);
+  border: 1.5px solid var(--line);
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 0.35rem;
+  text-align: left;
+  animation: floatCard 5.5s ease-in-out infinite;
+}
+
+.share-miss-code {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: var(--lavender-deep);
+}
+
+.share-miss-card strong {
+  font-size: 0.95rem;
+  word-break: break-all;
+}
+
+.share-miss-card small {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.share-miss-copy {
+  max-width: 34rem;
+}
+
+.share-miss-title {
+  margin: 0.35rem 0 0.7rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3.1rem);
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.share-miss-body {
+  margin: 0 0 1.35rem;
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+
+.share-miss-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.share-loading {
+  display: grid;
+  justify-items: center;
+  gap: 0.85rem;
+  padding: 2.5rem 0 3rem;
+}
+
+.share-loading-pulse {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  border-top-color: var(--lavender-deep);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .share-hero {
   padding-top: 1.25rem;
   padding-bottom: 0.25rem;
@@ -1927,6 +2048,26 @@ html[data-theme='dark'] .form-pane-code {
 
   .share-title {
     font-size: clamp(1.55rem, 8.2vw, 2.2rem);
+  }
+
+  .share-miss {
+    grid-template-columns: 1fr;
+    padding: 1.25rem 0 2.25rem;
+    gap: 1.1rem;
+  }
+
+  .share-miss-visual {
+    min-height: 220px;
+    order: -1;
+  }
+
+  .share-miss-title {
+    font-size: clamp(1.7rem, 8vw, 2.35rem);
+  }
+
+  .share-miss-actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .section-head-split {

@@ -53,6 +53,58 @@ export function PublicSharePage({ slug, onHome }: PublicSharePageProps) {
     void load();
   }, [load]);
 
+  if (!loading && (error || !profile)) {
+    return (
+      <div className="app share-page share-page-miss">
+        <TopBar onHome={onHome} active="home" publicMode />
+
+        <section className="share-miss" aria-labelledby="share-miss-title">
+          <div className="share-miss-visual" aria-hidden="true">
+            <div className="share-miss-orb share-miss-orb-a" />
+            <div className="share-miss-orb share-miss-orb-b" />
+            <div className="share-miss-card">
+              <span className="share-miss-code">404</span>
+              <strong>/u/{slug}</strong>
+              <small>{t('shareMissBroken')}</small>
+            </div>
+          </div>
+
+          <div className="share-miss-copy">
+            <p className="eyebrow">
+              <span className="dot" /> {t('shareMissEyebrow')}
+            </p>
+            <h1 className="share-miss-title" id="share-miss-title">
+              {t('shareMissTitle')}
+            </h1>
+            <p className="share-miss-body">{t('shareMissBody')}</p>
+            <div className="share-miss-actions">
+              <button type="button" className="btn btn-primary" onClick={onHome}>
+                {t('shareBackHome')}
+                <span className="btn-arrow" aria-hidden="true">
+                  →
+                </span>
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => void load()}
+              >
+                {t('shareMissRetry')}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <footer className="site-footer">
+          <span>
+            <strong>LeetLog</strong> — {t('footerLeft')}
+          </span>
+          <span>{t('footerRight')}</span>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="app share-page">
       <TopBar onHome={onHome} active="home" publicMode />
@@ -67,10 +119,11 @@ export function PublicSharePage({ slug, onHome }: PublicSharePageProps) {
         <p className="section-sub share-sub">{t('shareSub')}</p>
       </section>
 
-      {error && <div className="error-banner">{error}</div>}
-
       {loading && !stats ? (
-        <p className="loading">{t('bootLoading')}</p>
+        <div className="share-loading">
+          <div className="share-loading-pulse" aria-hidden="true" />
+          <p className="loading">{t('bootLoading')}</p>
+        </div>
       ) : profile ? (
         <>
           <Dashboard stats={stats} loading={loading} />

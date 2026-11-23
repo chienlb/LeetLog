@@ -121,6 +121,12 @@ export const translations = {
     shareEmptyCopy: 'This journal is still empty.',
     shareNotFound: 'Shared profile not found',
     shareBackHome: 'Back to LeetLog',
+    shareMissEyebrow: 'Broken share link',
+    shareMissTitle: 'This page drifted away',
+    shareMissBody:
+      'The link may be old, mistyped, or refreshed by its owner. Ask them for a new public link.',
+    shareMissBroken: 'Link unavailable',
+    shareMissRetry: 'Try again',
     shareLinkPending: 'Creating your public link…',
     shareLinkMissing:
       'Could not load the auto link yet. The API may need a redeploy — then refresh this page.',
@@ -264,6 +270,12 @@ export const translations = {
     shareEmptyCopy: 'Nhật ký này vẫn trống.',
     shareNotFound: 'Không tìm thấy trang chia sẻ',
     shareBackHome: 'Về LeetLog',
+    shareMissEyebrow: 'Link chia sẻ lỗi',
+    shareMissTitle: 'Trang này không còn ở đây',
+    shareMissBody:
+      'Link có thể cũ, gõ sai, hoặc đã được chủ sở hữu làm mới. Hãy xin link công khai mới.',
+    shareMissBroken: 'Link không khả dụng',
+    shareMissRetry: 'Thử lại',
     shareLinkPending: 'Đang tạo link công khai…',
     shareLinkMissing:
       'Chưa lấy được link tự động. Có thể API chưa deploy bản mới — hãy refresh sau khi deploy.',
