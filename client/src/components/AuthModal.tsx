@@ -56,7 +56,7 @@ export function AuthModal({ initialMode = 'login', onClose }: AuthModalProps) {
             </h2>
           </div>
           {onClose && (
-            <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
+            <button type="button" className="icon-btn" onClick={onClose} aria-label={t('close')}>
               ×
             </button>
           )}

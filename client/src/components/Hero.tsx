@@ -43,7 +43,8 @@ export function Hero({
           <h1 className="brand">
             {t('heroLine1')}
             <br />
-            {t('heroLine2Before')} <em>{t('heroLine2Em')}</em>
+            {t('heroLine2Before') ? `${t('heroLine2Before')} ` : null}
+            <em>{t('heroLine2Em')}</em>
             <br />
             {t('heroLine3')}
           </h1>

@@ -229,7 +229,7 @@ export function EntryForm({
                 className="field"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Two Sum"
+                placeholder={t('formTitlePlaceholder')}
                 required={canEdit}
                 readOnly={!canEdit}
               />
@@ -245,7 +245,7 @@ export function EntryForm({
                   onBlur={(e) => {
                     if (canEdit) applySlug(e.target.value);
                   }}
-                  placeholder="two-sum or https://leetcode.com/problems/two-sum"
+                  placeholder={t('formSlugPlaceholder')}
                   readOnly={!canEdit}
                 />
               </label>
@@ -318,7 +318,7 @@ export function EntryForm({
                       timeSpentMinutes: e.target.value === '' ? null : Number(e.target.value),
                     })
                   }
-                  placeholder="45"
+                  placeholder={t('formTimePlaceholder')}
                   readOnly={!canEdit}
                 />
               </label>
@@ -330,7 +330,7 @@ export function EntryForm({
                 className="field"
                 value={topicsText}
                 onChange={(e) => setTopicsText(e.target.value)}
-                placeholder="Array, Hash Table, Two Pointers"
+                placeholder={t('formTopicsPlaceholder')}
                 readOnly={!canEdit}
               />
             </label>

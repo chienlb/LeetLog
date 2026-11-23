@@ -65,7 +65,7 @@ export function TopBar({
       )}
 
       <div className="topnav-right">
-        <div className="topnav-controls" aria-label="Theme and language">
+        <div className="topnav-controls" aria-label={t('themeAndLanguage')}>
           <button
             type="button"
             className="ctrl-btn"
@@ -80,7 +80,7 @@ export function TopBar({
             )}
           </button>
 
-          <div className="lang-switch" role="group" aria-label="Language">
+          <div className="lang-switch" role="group" aria-label={t('language')}>
             <button
               type="button"
               className={`lang-btn ${lang === 'en' ? 'is-active' : ''}`}
