@@ -38,7 +38,7 @@ router.get('/:slug', async (req: Request, res: Response) => {
         .skip(skip)
         .limit(limit)
         .select(
-          'title slug difficulty topics status solvedAt timeSpentMinutes languages createdAt updatedAt'
+          'title slug difficulty topics status solvedAt timeSpentMinutes notes languages solutions createdAt updatedAt'
         )
         .lean(),
     ]);

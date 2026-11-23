@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import mongoose from 'mongoose';
 import { requireAuth } from '../middleware/auth.js';
 import { Entry, SOLUTION_LANGUAGES } from '../models/Entry.js';
+import { normalizeLeetCodeSlug } from '../utils/leetcode.js';
 
 const router = Router();
 
@@ -163,7 +164,7 @@ router.post('/', async (req: Request, res: Response) => {
     const entry = await Entry.create({
       userId: req.user!.userId,
       title: title.trim(),
-      slug: typeof slug === 'string' ? slug.trim() : '',
+      slug: typeof slug === 'string' ? normalizeLeetCodeSlug(slug) : '',
       difficulty,
       topics: parseTopics(req.body.topics),
       status: status || 'Solved',
@@ -202,7 +203,7 @@ router.put('/:id', async (req: Request, res: Response) => {
       }
       updates.title = title.trim();
     }
-    if (slug !== undefined) updates.slug = String(slug).trim();
+    if (slug !== undefined) updates.slug = normalizeLeetCodeSlug(String(slug));
     if (difficulty !== undefined) {
       if (!DIFFICULTIES.has(difficulty)) {
         res.status(400).json({ error: 'difficulty must be Easy, Medium, or Hard' });

@@ -2,6 +2,7 @@ import { useReveal } from '../hooks/useReveal';
 import { useI18n } from '../i18n/I18nContext';
 import type { Difficulty, Entry, EntryFilters, SolutionLanguage, Status } from '../types';
 import { SOLUTION_LANGUAGES } from '../types';
+import { LeetCodeOpenLink } from './LeetCodeOpenLink';
 import { SectionHead } from './SectionHead';
 
 interface EntryListProps {
@@ -164,15 +165,25 @@ export function EntryList({
         <>
           <div className="entry-list">
             {entries.map((entry, index) => (
-              <button
-                type="button"
+              <div
                 className={`entry-row tone-${entry.difficulty}`}
                 key={entry._id}
+                role="button"
+                tabIndex={0}
                 onClick={() => onSelect(entry)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelect(entry);
+                  }
+                }}
                 style={{ animationDelay: `${Math.min(index, 10) * 45}ms` }}
               >
                 <div className="entry-title-wrap">
-                  <p className="entry-title">{entry.title}</p>
+                  <div className="entry-title-row">
+                    <p className="entry-title">{entry.title}</p>
+                    <LeetCodeOpenLink slug={entry.slug} />
+                  </div>
                   <div className="entry-meta">
                     {entry.timeSpentMinutes != null
                       ? `${entry.timeSpentMinutes} min`
@@ -202,7 +213,7 @@ export function EntryList({
                   {entry.topics.length ? entry.topics.join(' · ') : t('noTopics')}
                 </span>
                 <span className="entry-date">{formatDate(entry.solvedAt)}</span>
-              </button>
+              </div>
             ))}
           </div>
 

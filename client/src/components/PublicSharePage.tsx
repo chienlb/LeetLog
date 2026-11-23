@@ -3,7 +3,9 @@ import { fetchPublicShare } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import type { Entry, PublicProfile, Stats } from '../types';
 import { Dashboard } from './Dashboard';
+import { EntryForm } from './EntryForm';
 import { Heatmap } from './Heatmap';
+import { LeetCodeOpenLink } from './LeetCodeOpenLink';
 import { SectionHead } from './SectionHead';
 import { TopBar } from './TopBar';
 
@@ -30,6 +32,7 @@ export function PublicSharePage({ slug, onHome }: PublicSharePageProps) {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [viewing, setViewing] = useState<Entry | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -153,10 +156,22 @@ export function PublicSharePage({ slug, onHome }: PublicSharePageProps) {
                   {entries.map((entry) => (
                     <div
                       key={entry._id}
-                      className={`entry-row entry-row-static tone-${entry.difficulty}`}
+                      role="button"
+                      tabIndex={0}
+                      className={`entry-row entry-row-share tone-${entry.difficulty}`}
+                      onClick={() => setViewing(entry)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setViewing(entry);
+                        }
+                      }}
                     >
                       <div className="entry-title-wrap">
-                        <p className="entry-title">{entry.title}</p>
+                        <div className="entry-title-row">
+                          <p className="entry-title">{entry.title}</p>
+                          <LeetCodeOpenLink slug={entry.slug} />
+                        </div>
                         <div className="entry-meta">
                           {entry.timeSpentMinutes != null
                             ? `${entry.timeSpentMinutes} min`
@@ -180,6 +195,15 @@ export function PublicSharePage({ slug, onHome }: PublicSharePageProps) {
                         {entry.topics.length ? entry.topics.join(' · ') : t('noTopics')}
                       </span>
                       <span className="entry-date">{formatDate(entry.solvedAt)}</span>
+                      <span
+                        className={`share-code-chip${
+                          entry.solutions?.some((s) => s.code?.trim()) ? '' : ' is-empty'
+                        }`}
+                      >
+                        {entry.solutions?.some((s) => s.code?.trim())
+                          ? t('shareViewCode')
+                          : t('shareNoCode')}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -221,6 +245,10 @@ export function PublicSharePage({ slug, onHome }: PublicSharePageProps) {
         </span>
         <span>{t('footerRight')}</span>
       </footer>
+
+      {viewing && (
+        <EntryForm entry={viewing} viewOnly onClose={() => setViewing(null)} />
+      )}
     </div>
   );
 }

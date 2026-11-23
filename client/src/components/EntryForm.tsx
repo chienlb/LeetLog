@@ -9,13 +9,16 @@ import type {
   Status,
 } from '../types';
 import { SOLUTION_LANGUAGES } from '../types';
+import { leetCodeProblemUrl, normalizeLeetCodeSlug } from '../utils/leetcode';
 import { CodeEditor } from './CodeEditor';
 
 interface EntryFormProps {
   entry: Entry | null;
   onClose: () => void;
-  onSave: (data: EntryInput, id?: string) => Promise<void>;
+  onSave?: (data: EntryInput, id?: string) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
+  /** Permanently read-only (e.g. public share). */
+  viewOnly?: boolean;
 }
 
 function toDateInput(iso: string): string {
@@ -67,7 +70,27 @@ function emptyForm(): EntryInput {
   };
 }
 
-export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) {
+function entryToForm(entry: Entry): EntryInput {
+  return {
+    title: entry.title,
+    slug: entry.slug || '',
+    difficulty: entry.difficulty,
+    topics: entry.topics,
+    status: entry.status,
+    solvedAt: toDateInput(entry.solvedAt),
+    timeSpentMinutes: entry.timeSpentMinutes,
+    notes: entry.notes || '',
+    solutions: entry.solutions ?? [],
+  };
+}
+
+export function EntryForm({
+  entry,
+  onClose,
+  onSave,
+  onDelete,
+  viewOnly = false,
+}: EntryFormProps) {
   const { t } = useI18n();
   const [form, setForm] = useState<EntryInput>(emptyForm);
   const [topicsText, setTopicsText] = useState('');
@@ -75,37 +98,54 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
   const [activeLang, setActiveLang] = useState<SolutionLanguage>('TypeScript');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // Existing entries open read-only until Edit; new entries start editable.
+  const [editing, setEditing] = useState(() => !entry && !viewOnly);
 
   useEffect(() => {
     if (entry) {
-      setForm({
-        title: entry.title,
-        slug: entry.slug || '',
-        difficulty: entry.difficulty,
-        topics: entry.topics,
-        status: entry.status,
-        solvedAt: toDateInput(entry.solvedAt),
-        timeSpentMinutes: entry.timeSpentMinutes,
-        notes: entry.notes || '',
-        solutions: entry.solutions ?? [],
-      });
+      setForm(entryToForm(entry));
       setTopicsText(entry.topics.join(', '));
       const map = solutionsToMap(entry.solutions);
       setCodeByLang(map);
       const firstFilled =
         SOLUTION_LANGUAGES.find((lang) => map[lang].trim()) ?? 'TypeScript';
       setActiveLang(firstFilled);
+      setEditing(false);
     } else {
       setForm(emptyForm());
       setTopicsText('');
       setCodeByLang(emptySolutions());
       setActiveLang('TypeScript');
+      setEditing(!viewOnly);
     }
     setError('');
-  }, [entry]);
+  }, [entry, viewOnly]);
+
+  const canEdit = editing && !viewOnly;
+  const problemUrl = leetCodeProblemUrl(form.slug || '');
+  const filledLangs = SOLUTION_LANGUAGES.filter((lang) => codeByLang[lang].trim());
+  const hasAnyCode = filledLangs.length > 0;
+  const visibleLangs = canEdit ? SOLUTION_LANGUAGES : filledLangs;
+
+  function applySlug(raw: string) {
+    setForm((prev) => ({ ...prev, slug: normalizeLeetCodeSlug(raw) }));
+  }
+
+  function cancelEdit() {
+    if (!entry) {
+      onClose();
+      return;
+    }
+    setForm(entryToForm(entry));
+    setTopicsText(entry.topics.join(', '));
+    setCodeByLang(solutionsToMap(entry.solutions));
+    setError('');
+    setEditing(false);
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!canEdit || !onSave) return;
     if (!form.title.trim()) {
       setError(t('formTitleRequired'));
       return;
@@ -117,7 +157,7 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
       const payload: EntryInput = {
         ...form,
         title: form.title.trim(),
-        slug: form.slug?.trim() || '',
+        slug: normalizeLeetCodeSlug(form.slug || ''),
         topics: topicsText
           .split(',')
           .map((topic) => topic.trim())
@@ -139,7 +179,7 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
   }
 
   async function handleDelete() {
-    if (!entry || !onDelete) return;
+    if (!entry || !onDelete || viewOnly) return;
     if (!window.confirm(`${t('formDeleteConfirm')} “${entry.title}”?`)) return;
     setSaving(true);
     setError('');
@@ -153,6 +193,14 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
     }
   }
 
+  const titleText = viewOnly
+    ? entry?.title || t('formViewTitle')
+    : !entry
+      ? t('formCreateTitle')
+      : canEdit
+        ? t('formEditTitle')
+        : t('formViewTitle');
+
   return (
     <div
       className="overlay"
@@ -164,7 +212,7 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
       <div className="panel panel-wide" role="dialog" aria-modal="true" aria-labelledby="form-title">
         <div className="panel-head">
           <h2 className="panel-title" id="form-title">
-            {entry ? t('formEditTitle') : t('formCreateTitle')}
+            {titleText}
           </h2>
           <button type="button" className="icon-btn" onClick={onClose} aria-label={t('close')}>
             ×
@@ -174,7 +222,7 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
         {error && <div className="error-banner">{error}</div>}
 
         <form className="form-split" onSubmit={handleSubmit}>
-          <div className="form-pane form-pane-meta">
+          <div className={`form-pane form-pane-meta${canEdit ? '' : ' is-readonly'}`}>
             <label className="label">
               {t('formTitle')}
               <input
@@ -182,19 +230,37 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="Two Sum"
-                required
+                required={canEdit}
+                readOnly={!canEdit}
               />
             </label>
 
-            <label className="label">
-              {t('formSlug')}
-              <input
-                className="field"
-                value={form.slug || ''}
-                onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                placeholder="https://leetcode.com/problems/two-sum"
-              />
-            </label>
+            <div className="slug-field-wrap">
+              <label className="label">
+                {t('formSlug')}
+                <input
+                  className="field"
+                  value={form.slug || ''}
+                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                  onBlur={(e) => {
+                    if (canEdit) applySlug(e.target.value);
+                  }}
+                  placeholder="two-sum or https://leetcode.com/problems/two-sum"
+                  readOnly={!canEdit}
+                />
+              </label>
+              {problemUrl && (
+                <a
+                  className="slug-open-link"
+                  href={problemUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t('formOpenLeetCode')}
+                  <span aria-hidden="true"> →</span>
+                </a>
+              )}
+            </div>
 
             <div className="form-row">
               <label className="label">
@@ -202,6 +268,7 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
                 <select
                   className="field-select"
                   value={form.difficulty}
+                  disabled={!canEdit}
                   onChange={(e) =>
                     setForm({ ...form, difficulty: e.target.value as Difficulty })
                   }
@@ -216,6 +283,7 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
                 <select
                   className="field-select"
                   value={form.status}
+                  disabled={!canEdit}
                   onChange={(e) => setForm({ ...form, status: e.target.value as Status })}
                 >
                   <option value="Solved">Solved</option>
@@ -233,7 +301,8 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
                   type="date"
                   value={form.solvedAt}
                   onChange={(e) => setForm({ ...form, solvedAt: e.target.value })}
-                  required
+                  required={canEdit}
+                  readOnly={!canEdit}
                 />
               </label>
               <label className="label">
@@ -250,6 +319,7 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
                     })
                   }
                   placeholder="45"
+                  readOnly={!canEdit}
                 />
               </label>
             </div>
@@ -261,6 +331,7 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
                 value={topicsText}
                 onChange={(e) => setTopicsText(e.target.value)}
                 placeholder="Array, Hash Table, Two Pointers"
+                readOnly={!canEdit}
               />
             </label>
 
@@ -271,6 +342,7 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder={t('formNotesPlaceholder')}
+                readOnly={!canEdit}
               />
             </label>
           </div>
@@ -278,59 +350,122 @@ export function EntryForm({ entry, onClose, onSave, onDelete }: EntryFormProps) 
           <div className="form-pane form-pane-code solution-block">
             <div className="solution-head">
               <span className="label-text">{t('formSolutions')}</span>
-              <p className="solution-hint">{t('formSolutionsHint')}</p>
+              <p className="solution-hint">
+                {canEdit
+                  ? t('formSolutionsHint')
+                  : hasAnyCode
+                    ? t('formSolutionsViewHint')
+                    : t('formSolutionsNoneHint')}
+              </p>
             </div>
 
-            <div className="lang-tabs" role="tablist" aria-label={t('formSolutions')}>
-              {SOLUTION_LANGUAGES.map((lang) => {
-                const filled = Boolean(codeByLang[lang].trim());
-                return (
-                  <button
-                    key={lang}
-                    type="button"
-                    role="tab"
-                    aria-selected={activeLang === lang}
-                    className={`lang-tab ${activeLang === lang ? 'is-active' : ''} ${filled ? 'has-code' : ''}`}
-                    onClick={() => setActiveLang(lang)}
-                  >
-                    {lang}
-                    {filled && <span className="lang-dot" aria-hidden="true" />}
-                  </button>
-                );
-              })}
-            </div>
+            {!canEdit && !hasAnyCode ? (
+              <div className="solution-empty-state" role="status">
+                <span className="solution-empty-mark" aria-hidden="true">
+                  {'</>'}
+                </span>
+                <strong>{t('formCodeEmptyTitle')}</strong>
+                <p>{t('formCodeEmpty')}</p>
+              </div>
+            ) : (
+              <>
+                <div className="lang-tabs" role="tablist" aria-label={t('formSolutions')}>
+                  {visibleLangs.map((lang) => {
+                    const filled = Boolean(codeByLang[lang].trim());
+                    return (
+                      <button
+                        key={lang}
+                        type="button"
+                        role="tab"
+                        aria-selected={activeLang === lang}
+                        className={`lang-tab ${activeLang === lang ? 'is-active' : ''} ${filled ? 'has-code' : ''}`}
+                        onClick={() => setActiveLang(lang)}
+                      >
+                        {lang}
+                        {filled && <span className="lang-dot" aria-hidden="true" />}
+                      </button>
+                    );
+                  })}
+                </div>
 
-            <CodeEditor
-              language={activeLang}
-              value={codeByLang[activeLang]}
-              onChange={(code) =>
-                setCodeByLang({
-                  ...codeByLang,
-                  [activeLang]: code,
-                })
-              }
-              placeholder={t('formCodePlaceholder').replace('{lang}', activeLang)}
-              aria-label={`${activeLang} ${t('formSolutions')}`}
-            />
+                <CodeEditor
+                  language={
+                    visibleLangs.includes(activeLang) ? activeLang : (visibleLangs[0] ?? 'TypeScript')
+                  }
+                  value={
+                    codeByLang[
+                      visibleLangs.includes(activeLang)
+                        ? activeLang
+                        : (visibleLangs[0] ?? 'TypeScript')
+                    ]
+                  }
+                  readOnly={!canEdit}
+                  onChange={(code) =>
+                    setCodeByLang({
+                      ...codeByLang,
+                      [activeLang]: code,
+                    })
+                  }
+                  placeholder={t('formCodePlaceholder').replace('{lang}', activeLang)}
+                  aria-label={`${activeLang} ${t('formSolutions')}`}
+                />
+              </>
+            )}
           </div>
 
           <div className="panel-actions form-split-actions">
-            {entry && onDelete && (
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={handleDelete}
-                disabled={saving}
-              >
-                {t('formDelete')}
+            {viewOnly ? (
+              <button type="button" className="btn btn-primary" onClick={onClose}>
+                {t('close')}
               </button>
+            ) : canEdit ? (
+              <>
+                {entry && onDelete && (
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={handleDelete}
+                    disabled={saving}
+                  >
+                    {t('formDelete')}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={cancelEdit}
+                  disabled={saving}
+                >
+                  {t('formCancel')}
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? t('formSaving') : entry ? t('formSave') : t('formCreate')}
+                </button>
+              </>
+            ) : (
+              <>
+                {entry && onDelete && (
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={handleDelete}
+                    disabled={saving}
+                  >
+                    {t('formDelete')}
+                  </button>
+                )}
+                <button type="button" className="btn btn-ghost" onClick={onClose}>
+                  {t('close')}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setEditing(true)}
+                >
+                  {t('formEdit')}
+                </button>
+              </>
             )}
-            <button type="button" className="btn btn-ghost" onClick={onClose} disabled={saving}>
-              {t('formCancel')}
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? t('formSaving') : entry ? t('formSave') : t('formCreate')}
-            </button>
           </div>
         </form>
       </div>

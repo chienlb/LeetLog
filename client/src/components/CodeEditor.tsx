@@ -14,8 +14,9 @@ import type { SolutionLanguage } from '../types';
 interface CodeEditorProps {
   language: SolutionLanguage;
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   placeholder?: string;
+  readOnly?: boolean;
   'aria-label'?: string;
 }
 
@@ -41,6 +42,7 @@ export function CodeEditor({
   value,
   onChange,
   placeholder,
+  readOnly = false,
   'aria-label': ariaLabel,
 }: CodeEditorProps) {
   const { theme } = useTheme();
@@ -49,6 +51,7 @@ export function CodeEditor({
     () => [
       languageExtension(language),
       EditorView.lineWrapping,
+      EditorView.editable.of(!readOnly),
       EditorView.theme({
         '&': {
           height: '100%',
@@ -69,28 +72,30 @@ export function CodeEditor({
         },
       }),
     ],
-    [language]
+    [language, readOnly]
   );
 
   return (
-    <div className="code-editor-shell" aria-label={ariaLabel}>
+    <div className={`code-editor-shell${readOnly ? ' is-readonly' : ''}`} aria-label={ariaLabel}>
       <CodeMirror
         value={value}
         height="100%"
         theme={theme === 'dark' ? vscodeDark : githubLight}
         extensions={extensions}
         placeholder={placeholder}
+        editable={!readOnly}
+        readOnly={readOnly}
         basicSetup={{
           lineNumbers: true,
-          highlightActiveLine: true,
-          highlightActiveLineGutter: true,
+          highlightActiveLine: !readOnly,
+          highlightActiveLineGutter: !readOnly,
           foldGutter: false,
           bracketMatching: true,
-          closeBrackets: true,
+          closeBrackets: !readOnly,
           autocompletion: false,
-          indentOnInput: true,
+          indentOnInput: !readOnly,
         }}
-        onChange={onChange}
+        onChange={readOnly ? undefined : onChange}
       />
     </div>
   );
