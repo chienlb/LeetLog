@@ -910,17 +910,20 @@ html[data-theme='dark'] .lang-btn.is-active {
   max-height: min(92vh, 900px);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .form-split {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  grid-template-rows: minmax(0, 1fr) auto;
   grid-template-areas:
     'meta code'
     'actions actions';
   gap: 1.1rem 1.35rem;
   min-height: 0;
   flex: 1;
+  overflow: hidden;
 }
 
 .form-pane {
@@ -933,6 +936,8 @@ html[data-theme='dark'] .lang-btn.is-active {
 
 .form-pane-meta {
   grid-area: meta;
+  overflow: auto;
+  padding-right: 0.15rem;
 }
 
 .form-pane-code {
@@ -941,13 +946,17 @@ html[data-theme='dark'] .lang-btn.is-active {
   border: 1.5px solid var(--line);
   border-radius: 22px;
   background: var(--bg-soft);
+  align-content: stretch;
   grid-template-rows: auto auto minmax(0, 1fr);
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .form-split-actions {
   grid-area: actions;
   margin-top: 0.15rem;
+  flex-shrink: 0;
 }
 
 .label-grow {
@@ -962,6 +971,7 @@ html[data-theme='dark'] .lang-btn.is-active {
 .solution-block {
   display: grid;
   gap: 0.7rem;
+  min-height: 0;
 }
 
 .solution-head {
@@ -1031,7 +1041,7 @@ html[data-theme='dark'] .lang-btn.is-active {
 }
 
 .code-editor-shell {
-  min-height: 280px;
+  min-height: 0;
   height: 100%;
   min-width: 0;
   overflow: hidden;
@@ -1042,8 +1052,14 @@ html[data-theme='dark'] .lang-btn.is-active {
 
 .code-editor-shell .cm-editor {
   height: 100%;
+  max-height: 100%;
   border-radius: 16px;
   overflow: hidden;
+}
+
+.code-editor-shell .cm-scroller {
+  overflow: auto !important;
+  max-height: 100%;
 }
 
 .code-editor-shell .cm-editor.cm-focused {
@@ -2172,14 +2188,21 @@ html[data-theme='dark'] .form-pane-code {
 
   .form-split {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(280px, 1fr) auto;
     grid-template-areas:
       'meta'
       'code'
       'actions';
+    overflow: auto;
+  }
+
+  .form-pane-meta {
+    max-height: none;
+    overflow: visible;
   }
 
   .form-pane-code {
-    min-height: 320px;
+    min-height: 280px;
   }
 
   .code-editor-shell {

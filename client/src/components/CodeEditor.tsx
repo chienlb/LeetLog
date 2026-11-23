@@ -55,9 +55,11 @@ export function CodeEditor({
       EditorView.theme({
         '&': {
           height: '100%',
+          maxHeight: '100%',
           fontSize: '0.86rem',
         },
         '.cm-scroller': {
+          overflow: 'auto',
           fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
           lineHeight: '1.55',
         },

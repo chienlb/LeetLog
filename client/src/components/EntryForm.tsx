@@ -211,13 +211,7 @@ export function EntryForm({
         : t('formViewTitle');
 
   return (
-    <div
-      className="overlay"
-      role="presentation"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <div className="overlay" role="presentation">
       <div className="panel panel-wide" role="dialog" aria-modal="true" aria-labelledby="form-title">
         <div className="panel-head">
           <h2 className="panel-title" id="form-title">
@@ -422,61 +416,58 @@ export function EntryForm({
             )}
           </div>
 
-          <div className="panel-actions form-split-actions">
-            {viewOnly ? (
-              <button type="button" className="btn btn-primary" onClick={onClose}>
-                {t('close')}
-              </button>
-            ) : canEdit ? (
-              <>
-                {entry && onDelete && (
+          {!viewOnly && (
+            <div className="panel-actions form-split-actions">
+              {canEdit ? (
+                <>
+                  {entry && onDelete && (
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={handleDelete}
+                      disabled={saving}
+                    >
+                      {t('formDelete')}
+                    </button>
+                  )}
+                  {entry ? (
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={cancelEdit}
+                      disabled={saving}
+                    >
+                      {t('formCancel')}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
-                    className="btn btn-danger"
-                    onClick={handleDelete}
+                    className="btn btn-primary"
                     disabled={saving}
+                    onClick={() => void saveEntry()}
                   >
-                    {t('formDelete')}
+                    {saving ? t('formSaving') : entry ? t('formSave') : t('formCreate')}
                   </button>
-                )}
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={cancelEdit}
-                  disabled={saving}
-                >
-                  {t('formCancel')}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={saving}
-                  onClick={() => void saveEntry()}
-                >
-                  {saving ? t('formSaving') : entry ? t('formSave') : t('formCreate')}
-                </button>
-              </>
-            ) : (
-              <>
-                {entry && onDelete && (
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={handleDelete}
-                    disabled={saving}
-                  >
-                    {t('formDelete')}
+                </>
+              ) : (
+                <>
+                  {entry && onDelete && (
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={handleDelete}
+                      disabled={saving}
+                    >
+                      {t('formDelete')}
+                    </button>
+                  )}
+                  <button type="button" className="btn btn-primary" onClick={beginEdit}>
+                    {t('formEdit')}
                   </button>
-                )}
-                <button type="button" className="btn btn-ghost" onClick={onClose}>
-                  {t('close')}
-                </button>
-                <button type="button" className="btn btn-primary" onClick={beginEdit}>
-                  {t('formEdit')}
-                </button>
-              </>
-            )}
-          </div>
+                </>
+              )}
+            </div>
+          )}
         </form>
       </div>
     </div>
