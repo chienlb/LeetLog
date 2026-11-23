@@ -1,6 +1,6 @@
 import mongoose, { Schema, type InferSchemaType } from 'mongoose';
 
-export const SOLUTION_LANGUAGES = ['TypeScript', 'Go', 'Rust', 'C++'] as const;
+export const SOLUTION_LANGUAGES = ['TypeScript', 'Go', 'Rust', 'C++', 'SQL'] as const;
 
 const solutionSchema = new Schema(
   {
@@ -39,6 +39,10 @@ const entrySchema = new Schema(
     solvedAt: { type: Date, required: true, default: Date.now },
     timeSpentMinutes: { type: Number, min: 0, default: null },
     notes: { type: String, default: '' },
+    languages: {
+      type: [{ type: String, enum: SOLUTION_LANGUAGES }],
+      default: [],
+    },
     solutions: { type: [solutionSchema], default: [] },
   },
   { timestamps: true }
@@ -48,6 +52,8 @@ entrySchema.index({ userId: 1, solvedAt: -1 });
 entrySchema.index({ userId: 1, difficulty: 1 });
 entrySchema.index({ userId: 1, status: 1 });
 entrySchema.index({ userId: 1, topics: 1 });
+entrySchema.index({ userId: 1, languages: 1 });
+entrySchema.index({ userId: 1, 'solutions.language': 1 });
 
 export type EntryDocument = InferSchemaType<typeof entrySchema> & {
   _id: mongoose.Types.ObjectId;

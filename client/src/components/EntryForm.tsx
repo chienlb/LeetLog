@@ -32,6 +32,7 @@ function emptySolutions(): Record<SolutionLanguage, string> {
     Go: '',
     Rust: '',
     'C++': '',
+    SQL: '',
   };
 }
 

@@ -32,6 +32,7 @@ function buildQuery(
   if (filters.difficulty) params.set('difficulty', filters.difficulty);
   if (filters.status) params.set('status', filters.status);
   if (filters.topic) params.set('topic', filters.topic);
+  if (filters.language) params.set('language', filters.language);
   if (filters.q) params.set('q', filters.q);
   if (pagination?.page) params.set('page', String(pagination.page));
   if (pagination?.limit) params.set('limit', String(pagination.limit));
@@ -113,12 +114,21 @@ export async function fetchEntries(
 
   // Compat: older API returned a raw array (e.g. undeployed Vercel).
   if (Array.isArray(data)) {
-    const total = data.length;
+    const filtered = filters.language
+      ? data.filter((entry) => {
+          const langs =
+            entry.languages?.length
+              ? entry.languages
+              : (entry.solutions ?? []).map((sol) => sol.language);
+          return langs.includes(filters.language as Entry['languages'][number]);
+        })
+      : data;
+    const total = filtered.length;
     const totalPages = Math.max(1, Math.ceil(total / limit));
     const safePage = Math.min(page, totalPages);
     const start = (safePage - 1) * limit;
     return {
-      items: data.slice(start, start + limit),
+      items: filtered.slice(start, start + limit),
       total,
       page: safePage,
       limit,

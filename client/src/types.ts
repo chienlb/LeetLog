@@ -1,12 +1,13 @@
 export type Difficulty = 'Easy' | 'Medium' | 'Hard';
 export type Status = 'Solved' | 'Review' | 'Attempted';
-export type SolutionLanguage = 'TypeScript' | 'Go' | 'Rust' | 'C++';
+export type SolutionLanguage = 'TypeScript' | 'Go' | 'Rust' | 'C++' | 'SQL';
 
 export const SOLUTION_LANGUAGES: SolutionLanguage[] = [
   'TypeScript',
   'Go',
   'Rust',
   'C++',
+  'SQL',
 ];
 
 export interface Solution {
@@ -36,6 +37,7 @@ export interface Entry {
   solvedAt: string;
   timeSpentMinutes: number | null;
   notes: string;
+  languages: SolutionLanguage[];
   solutions: Solution[];
   createdAt: string;
   updatedAt: string;
@@ -66,6 +68,7 @@ export interface EntryFilters {
   difficulty: '' | Difficulty;
   status: '' | Status;
   topic: string;
+  language: '' | SolutionLanguage;
   q: string;
 }
 

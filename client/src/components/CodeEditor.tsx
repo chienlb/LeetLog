@@ -2,6 +2,7 @@ import { cpp } from '@codemirror/lang-cpp';
 import { go } from '@codemirror/lang-go';
 import { javascript } from '@codemirror/lang-javascript';
 import { rust } from '@codemirror/lang-rust';
+import { sql } from '@codemirror/lang-sql';
 import { EditorView } from '@codemirror/view';
 import { githubLight } from '@uiw/codemirror-theme-github';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
@@ -28,6 +29,8 @@ function languageExtension(language: SolutionLanguage) {
       return rust();
     case 'C++':
       return cpp();
+    case 'SQL':
+      return sql();
     default:
       return javascript({ typescript: true });
   }

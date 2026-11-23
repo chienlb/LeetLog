@@ -51,10 +51,24 @@ function parseSolutions(input: unknown): { language: string; code: string }[] | 
   return solutions;
 }
 
+function languagesFromSolutions(
+  solutions: { language: string; code: string }[]
+): string[] {
+  return solutions.map((s) => s.language);
+}
+
 router.get('/', async (req: Request, res: Response) => {
   try {
     const filter: Record<string, unknown> = { userId: req.user!.userId };
-    const { difficulty, status, topic, q, page: pageRaw, limit: limitRaw } = req.query;
+    const {
+      difficulty,
+      status,
+      topic,
+      language,
+      q,
+      page: pageRaw,
+      limit: limitRaw,
+    } = req.query;
 
     if (typeof difficulty === 'string' && DIFFICULTIES.has(difficulty)) {
       filter.difficulty = difficulty;
@@ -64,6 +78,9 @@ router.get('/', async (req: Request, res: Response) => {
     }
     if (typeof topic === 'string' && topic.trim()) {
       filter.topics = topic.trim();
+    }
+    if (typeof language === 'string' && LANGUAGES.has(language)) {
+      filter.languages = language;
     }
     if (typeof q === 'string' && q.trim()) {
       filter.title = { $regex: q.trim(), $options: 'i' };
@@ -141,6 +158,7 @@ router.post('/', async (req: Request, res: Response) => {
       res.status(400).json({ error: 'solutions must be an array of { language, code }' });
       return;
     }
+    const parsedSolutions = solutions ?? [];
 
     const entry = await Entry.create({
       userId: req.user!.userId,
@@ -155,7 +173,8 @@ router.post('/', async (req: Request, res: Response) => {
           ? null
           : Number(timeSpentMinutes),
       notes: typeof notes === 'string' ? notes : '',
-      solutions: solutions ?? [],
+      solutions: parsedSolutions,
+      languages: languagesFromSolutions(parsedSolutions),
     });
 
     res.status(201).json(entry);
@@ -214,6 +233,7 @@ router.put('/:id', async (req: Request, res: Response) => {
         return;
       }
       updates.solutions = solutions;
+      updates.languages = languagesFromSolutions(solutions);
     }
 
     const entry = await Entry.findOneAndUpdate(

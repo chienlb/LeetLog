@@ -9,7 +9,7 @@ const USER_ID = '6b03b6970f5b282f7958745f';
 
 type Difficulty = 'Easy' | 'Medium' | 'Hard';
 type Status = 'Solved' | 'Review' | 'Attempted';
-type SolutionLanguage = 'TypeScript' | 'Go' | 'Rust' | 'C++';
+type SolutionLanguage = 'TypeScript' | 'Go' | 'Rust' | 'C++' | 'SQL';
 
 interface SeedSolution {
   language: SolutionLanguage;
@@ -146,11 +146,14 @@ function sampleSolutionsFor(slug: string, index: number): SeedSolution[] {
   if (SAMPLE_SOLUTIONS[slug]) return SAMPLE_SOLUTIONS[slug];
   if (index % 4 !== 0) return [];
 
-  const langs: SolutionLanguage[] = ['TypeScript', 'Go', 'Rust', 'C++'];
+  const langs: SolutionLanguage[] = ['TypeScript', 'Go', 'Rust', 'C++', 'SQL'];
   const pick = langs.filter((_, i) => (index + i) % 3 !== 0).slice(0, 1 + (index % 3));
   return pick.map((language) => ({
     language,
-    code: `// ${language} solution draft for ${slug}\n// TODO: polish edge cases\n`,
+    code:
+      language === 'SQL'
+        ? `-- ${language} solution draft for ${slug}\n-- TODO: polish edge cases\nSELECT 1;`
+        : `// ${language} solution draft for ${slug}\n// TODO: polish edge cases\n`,
   }));
 }
 
@@ -659,6 +662,69 @@ const seeds: SeedEntry[] = [
     timeSpentMinutes: 95,
     notes: 'Monotonic stack of increasing heights.',
   },
+  {
+    title: 'Second Highest Salary',
+    slug: 'second-highest-salary',
+    difficulty: 'Medium',
+    topics: ['Database'],
+    status: 'Solved',
+    daysAgo: 1,
+    timeSpentMinutes: 20,
+    notes: 'Use DISTINCT + LIMIT/OFFSET or subquery.',
+    solutions: [
+      {
+        language: 'SQL',
+        code: `SELECT (
+  SELECT DISTINCT salary
+  FROM Employee
+  ORDER BY salary DESC
+  LIMIT 1 OFFSET 1
+) AS SecondHighestSalary;`,
+      },
+    ],
+  },
+  {
+    title: 'Employees Earning More Than Their Managers',
+    slug: 'employees-earning-more-than-their-managers',
+    difficulty: 'Easy',
+    topics: ['Database'],
+    status: 'Solved',
+    daysAgo: 4,
+    timeSpentMinutes: 15,
+    notes: 'Self-join on managerId.',
+    solutions: [
+      {
+        language: 'SQL',
+        code: `SELECT e.name AS Employee
+FROM Employee e
+JOIN Employee m ON e.managerId = m.id
+WHERE e.salary > m.salary;`,
+      },
+    ],
+  },
+  {
+    title: 'Department Highest Salary',
+    slug: 'department-highest-salary',
+    difficulty: 'Medium',
+    topics: ['Database'],
+    status: 'Review',
+    daysAgo: 9,
+    timeSpentMinutes: 35,
+    notes: 'Window function or join with max per department.',
+    solutions: [
+      {
+        language: 'SQL',
+        code: `SELECT d.name AS Department, e.name AS Employee, e.salary AS Salary
+FROM Employee e
+JOIN Department d ON e.departmentId = d.id
+WHERE e.salary = (
+  SELECT MAX(salary)
+  FROM Employee
+  WHERE departmentId = e.departmentId
+);`,
+      },
+    ],
+  },
 ];
 
 const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
@@ -883,23 +949,29 @@ async function main() {
 
   console.log(`Seeding for ${user.name} <${user.email}>`);
 
-  const deleted = await Entry.deleteMany({ userId: USER_ID });
+  const deleted = await Entry.deleteMany({
+    userId: new mongoose.Types.ObjectId(USER_ID),
+  });
   console.log(`Cleared ${deleted.deletedCount} existing entries`);
 
   const allSeeds = [...seeds, ...buildBulkSeeds(160)];
   const now = Date.now();
-  const docs = allSeeds.map((s, index) => ({
-    userId: new mongoose.Types.ObjectId(USER_ID),
-    title: s.title,
-    slug: s.slug,
-    difficulty: s.difficulty,
-    topics: s.topics,
-    status: s.status,
-    solvedAt: new Date(now - s.daysAgo * 24 * 60 * 60 * 1000),
-    timeSpentMinutes: s.timeSpentMinutes,
-    notes: s.notes,
-    solutions: s.solutions ?? sampleSolutionsFor(s.slug, index),
-  }));
+  const docs = allSeeds.map((s, index) => {
+    const solutions = s.solutions ?? sampleSolutionsFor(s.slug, index);
+    return {
+      userId: new mongoose.Types.ObjectId(USER_ID),
+      title: s.title,
+      slug: s.slug,
+      difficulty: s.difficulty,
+      topics: s.topics,
+      status: s.status,
+      solvedAt: new Date(now - s.daysAgo * 24 * 60 * 60 * 1000),
+      timeSpentMinutes: s.timeSpentMinutes,
+      notes: s.notes,
+      solutions,
+      languages: solutions.map((sol) => sol.language),
+    };
+  });
 
   const inserted = await Entry.insertMany(docs);
   console.log(`Inserted ${inserted.length} entries`);

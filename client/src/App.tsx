@@ -21,6 +21,7 @@ const emptyFilters: EntryFilters = {
   difficulty: '',
   status: '',
   topic: '',
+  language: '',
   q: '',
 };
 

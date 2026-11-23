@@ -1,6 +1,7 @@
 import { useReveal } from '../hooks/useReveal';
 import { useI18n } from '../i18n/I18nContext';
-import type { Difficulty, Entry, EntryFilters, Status } from '../types';
+import type { Difficulty, Entry, EntryFilters, SolutionLanguage, Status } from '../types';
+import { SOLUTION_LANGUAGES } from '../types';
 import { SectionHead } from './SectionHead';
 
 interface EntryListProps {
@@ -132,6 +133,24 @@ export function EntryList({
             </option>
           ))}
         </select>
+        <select
+          className="field-select"
+          value={filters.language}
+          onChange={(e) =>
+            onFiltersChange({
+              ...filters,
+              language: e.target.value as '' | SolutionLanguage,
+            })
+          }
+          aria-label={t('allLanguages')}
+        >
+          <option value="">{t('allLanguages')}</option>
+          {SOLUTION_LANGUAGES.map((lang) => (
+            <option key={lang} value={lang}>
+              {lang}
+            </option>
+          ))}
+        </select>
       </div>
 
       {loading ? (
@@ -158,11 +177,17 @@ export function EntryList({
                     {entry.timeSpentMinutes != null
                       ? `${entry.timeSpentMinutes} min`
                       : t('noTime')}
-                    {(entry.solutions ?? []).length > 0 && (
+                    {((entry.languages?.length
+                      ? entry.languages
+                      : (entry.solutions ?? []).map((sol) => sol.language)
+                    ).length > 0) && (
                       <span className="lang-chips">
-                        {(entry.solutions ?? []).map((sol) => (
-                          <span key={sol.language} className="lang-chip">
-                            {sol.language}
+                        {(entry.languages?.length
+                          ? entry.languages
+                          : (entry.solutions ?? []).map((sol) => sol.language)
+                        ).map((lang) => (
+                          <span key={lang} className="lang-chip">
+                            {lang}
                           </span>
                         ))}
                       </span>
