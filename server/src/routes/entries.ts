@@ -1,12 +1,13 @@
 import { Router, type Request, type Response } from 'express';
 import mongoose from 'mongoose';
 import { requireAuth } from '../middleware/auth.js';
-import { Entry } from '../models/Entry.js';
+import { Entry, SOLUTION_LANGUAGES } from '../models/Entry.js';
 
 const router = Router();
 
 const DIFFICULTIES = new Set(['Easy', 'Medium', 'Hard']);
 const STATUSES = new Set(['Solved', 'Review', 'Attempted']);
+const LANGUAGES = new Set<string>(SOLUTION_LANGUAGES);
 
 router.use(requireAuth);
 
@@ -29,10 +30,31 @@ function parseTopics(input: unknown): string[] {
   return [];
 }
 
+function parseSolutions(input: unknown): { language: string; code: string }[] | null {
+  if (input === undefined) return null;
+  if (!Array.isArray(input)) return null;
+
+  const seen = new Set<string>();
+  const solutions: { language: string; code: string }[] = [];
+
+  for (const item of input) {
+    if (!item || typeof item !== 'object') continue;
+    const language = String((item as { language?: unknown }).language ?? '').trim();
+    const code = String((item as { code?: unknown }).code ?? '');
+    if (!LANGUAGES.has(language)) continue;
+    if (!code.trim()) continue;
+    if (seen.has(language)) continue;
+    seen.add(language);
+    solutions.push({ language, code });
+  }
+
+  return solutions;
+}
+
 router.get('/', async (req: Request, res: Response) => {
   try {
     const filter: Record<string, unknown> = { userId: req.user!.userId };
-    const { difficulty, status, topic, q } = req.query;
+    const { difficulty, status, topic, q, page: pageRaw, limit: limitRaw } = req.query;
 
     if (typeof difficulty === 'string' && DIFFICULTIES.has(difficulty)) {
       filter.difficulty = difficulty;
@@ -47,8 +69,25 @@ router.get('/', async (req: Request, res: Response) => {
       filter.title = { $regex: q.trim(), $options: 'i' };
     }
 
-    const entries = await Entry.find(filter).sort({ solvedAt: -1 }).lean();
-    res.json(entries);
+    const page = Math.max(1, Number.parseInt(String(pageRaw ?? '1'), 10) || 1);
+    const limit = Math.min(
+      50,
+      Math.max(1, Number.parseInt(String(limitRaw ?? '10'), 10) || 10)
+    );
+    const skip = (page - 1) * limit;
+
+    const [total, items] = await Promise.all([
+      Entry.countDocuments(filter),
+      Entry.find(filter).sort({ solvedAt: -1 }).skip(skip).limit(limit).lean(),
+    ]);
+
+    res.json({
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch entries' });
@@ -96,6 +135,13 @@ router.post('/', async (req: Request, res: Response) => {
       return;
     }
 
+    const solutions =
+      req.body.solutions === undefined ? [] : parseSolutions(req.body.solutions);
+    if (req.body.solutions !== undefined && solutions === null) {
+      res.status(400).json({ error: 'solutions must be an array of { language, code }' });
+      return;
+    }
+
     const entry = await Entry.create({
       userId: req.user!.userId,
       title: title.trim(),
@@ -109,6 +155,7 @@ router.post('/', async (req: Request, res: Response) => {
           ? null
           : Number(timeSpentMinutes),
       notes: typeof notes === 'string' ? notes : '',
+      solutions: solutions ?? [],
     });
 
     res.status(201).json(entry);
@@ -160,6 +207,14 @@ router.put('/:id', async (req: Request, res: Response) => {
           : Number(timeSpentMinutes);
     }
     if (notes !== undefined) updates.notes = String(notes);
+    if (req.body.solutions !== undefined) {
+      const solutions = parseSolutions(req.body.solutions);
+      if (solutions === null) {
+        res.status(400).json({ error: 'solutions must be an array of { language, code }' });
+        return;
+      }
+      updates.solutions = solutions;
+    }
 
     const entry = await Entry.findOneAndUpdate(
       { _id: id, userId: req.user!.userId },

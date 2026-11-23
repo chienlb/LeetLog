@@ -3,6 +3,7 @@ import type {
   Entry,
   EntryFilters,
   EntryInput,
+  PaginatedEntries,
   Stats,
   User,
 } from './types';
@@ -23,12 +24,17 @@ export function setToken(token: string | null) {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-function buildQuery(filters: EntryFilters): string {
+function buildQuery(
+  filters: EntryFilters,
+  pagination?: { page?: number; limit?: number }
+): string {
   const params = new URLSearchParams();
   if (filters.difficulty) params.set('difficulty', filters.difficulty);
   if (filters.status) params.set('status', filters.status);
   if (filters.topic) params.set('topic', filters.topic);
   if (filters.q) params.set('q', filters.q);
+  if (pagination?.page) params.set('page', String(pagination.page));
+  if (pagination?.limit) params.set('limit', String(pagination.limit));
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 }
@@ -95,8 +101,32 @@ export function changePassword(data: {
   });
 }
 
-export function fetchEntries(filters: EntryFilters): Promise<Entry[]> {
-  return request<Entry[]>(`/api/entries${buildQuery(filters)}`);
+export async function fetchEntries(
+  filters: EntryFilters,
+  pagination: { page: number; limit?: number } = { page: 1, limit: 10 }
+): Promise<PaginatedEntries> {
+  const limit = pagination.limit ?? 10;
+  const page = Math.max(1, pagination.page);
+  const data = await request<PaginatedEntries | Entry[]>(
+    `/api/entries${buildQuery(filters, { page, limit })}`
+  );
+
+  // Compat: older API returned a raw array (e.g. undeployed Vercel).
+  if (Array.isArray(data)) {
+    const total = data.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const safePage = Math.min(page, totalPages);
+    const start = (safePage - 1) * limit;
+    return {
+      items: data.slice(start, start + limit),
+      total,
+      page: safePage,
+      limit,
+      totalPages,
+    };
+  }
+
+  return data;
 }
 
 export function fetchStats(): Promise<Stats> {

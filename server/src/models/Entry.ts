@@ -1,5 +1,19 @@
 import mongoose, { Schema, type InferSchemaType } from 'mongoose';
 
+export const SOLUTION_LANGUAGES = ['TypeScript', 'Go', 'Rust', 'C++'] as const;
+
+const solutionSchema = new Schema(
+  {
+    language: {
+      type: String,
+      enum: SOLUTION_LANGUAGES,
+      required: true,
+    },
+    code: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
 const entrySchema = new Schema(
   {
     userId: {
@@ -25,6 +39,7 @@ const entrySchema = new Schema(
     solvedAt: { type: Date, required: true, default: Date.now },
     timeSpentMinutes: { type: Number, min: 0, default: null },
     notes: { type: String, default: '' },
+    solutions: { type: [solutionSchema], default: [] },
   },
   { timestamps: true }
 );

@@ -34,6 +34,10 @@ export default function App() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [filters, setFilters] = useState<EntryFilters>(emptyFilters);
   const [debouncedFilters, setDebouncedFilters] = useState<EntryFilters>(emptyFilters);
+  const [page, setPage] = useState(1);
+  const [totalEntries, setTotalEntries] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 10;
   const [loadingEntries, setLoadingEntries] = useState(false);
   const [loadingStats, setLoadingStats] = useState(false);
   const [error, setError] = useState('');
@@ -46,7 +50,10 @@ export default function App() {
   }, [user]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedFilters(filters), 250);
+    const timer = window.setTimeout(() => {
+      setDebouncedFilters(filters);
+      setPage(1);
+    }, 250);
     return () => window.clearTimeout(timer);
   }, [filters]);
 
@@ -67,20 +74,29 @@ export default function App() {
     if (!user) return;
     setLoadingEntries(true);
     try {
-      const data = await fetchEntries(debouncedFilters);
-      setEntries(data);
+      const data = await fetchEntries(debouncedFilters, { page, limit: pageSize });
+      if (page > data.totalPages) {
+        setPage(data.totalPages);
+        return;
+      }
+      setEntries(data.items ?? []);
+      setTotalEntries(data.total ?? 0);
+      setTotalPages(data.totalPages ?? 1);
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load entries');
     } finally {
       setLoadingEntries(false);
     }
-  }, [debouncedFilters, user]);
+  }, [debouncedFilters, page, user]);
 
   useEffect(() => {
     if (!user) {
       setEntries([]);
       setStats(null);
+      setTotalEntries(0);
+      setTotalPages(1);
+      setPage(1);
       return;
     }
     void loadEntries();
@@ -93,7 +109,7 @@ export default function App() {
 
   const topicOptions = useMemo(() => {
     const fromStats = stats?.topicBreakdown.map((item) => item.topic) ?? [];
-    const fromEntries = entries.flatMap((e) => e.topics);
+    const fromEntries = (entries ?? []).flatMap((e) => e.topics ?? []);
     return [...new Set([...fromStats, ...fromEntries])].sort((a, b) =>
       a.localeCompare(b)
     );
@@ -208,6 +224,10 @@ export default function App() {
             onFiltersChange={setFilters}
             onSelect={openEdit}
             topics={topicOptions}
+            page={page}
+            total={totalEntries}
+            totalPages={totalPages}
+            onPageChange={setPage}
           />
         </>
       )}
